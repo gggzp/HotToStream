@@ -5,3 +5,4 @@ streamlit
 joblib
 CoolProp
 matplotlib
+bs4
