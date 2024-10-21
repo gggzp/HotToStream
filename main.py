@@ -10,7 +10,7 @@ from matplotlib.patches import FancyBboxPatch, Arrow
 from cryptography.fernet import Fernet
 import io
 
-plt.rcParams['font.sans-serif'] = [''Microsoft YaHei'']
+plt.rcParams['font.sans-serif'] = ['Microsoft YaHei']
 
 plt.rcParams['font.family'] = 'sans-serif'
 
