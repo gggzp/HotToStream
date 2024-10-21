@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, Arrow
 from cryptography.fernet import Fernet
 import io
-
+matplotlib.rc("font",family='FangSong')
 key=st.secrets["key"]
 cipher_suite = Fernet(key)
 
