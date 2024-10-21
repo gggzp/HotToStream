@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from scipy.interpolate import Rbf
 import os
 from joblib import dump, load
@@ -9,10 +10,6 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, Arrow
 from cryptography.fernet import Fernet
 import io
-
-plt.rcParams['font.sans-serif'] = ['Arial', 'Liberation Sans', 'Bitstream Vera Sans']
-plt.rcParams['font.family'] = 'sans-serif'
-plt.rcParams['axes.unicode_minus'] = False
 
 key=st.secrets["key"]
 cipher_suite = Fernet(key)
