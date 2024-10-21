@@ -14,15 +14,6 @@ from bs4 import BeautifulSoup
 from io import BytesIO
 
 
-# 设置matplotlib支持中文
-# 'font.sans-serif' 设置默认字体为支持中文的字体，这里使用黑体
-plt.rcParams['font.sans-serif'] = ['SimHei']
-# 'font.family' 设置字体族为无衬线字体
-plt.rcParams['font.family'] = ['SimHei']
-# 'axes.unicode_minus' 设置为False以确保负号可以正确显示
-plt.rcParams['axes.unicode_minus'] = False
-
-
 onedrive_shared_link = st.secrets['onedrive_shared_link']
 def download_folder_from_onedrive(onedrive_shared_link):
     # 发送GET请求获取文件夹内容
@@ -600,6 +591,8 @@ def main():
     st.title('余热产蒸汽系统')
     if 'files_content' not in st.session_state:
         st.session_state['files_content'] = download_folder_from_onedrive(onedrive_shared_link)
+        st.write('已从OneDrive下载文件')
+        st.write(st.session_state['files_content'])
 
     with st.sidebar:
         st.header('输入参数')
