@@ -31,11 +31,6 @@ def download_file_from_onedrive(onedrive_shared_link):
         f.write(response.content)
     st.success(f'文件 {file_name} 下载成功！')
     return file_name
-if st.button("下载文件"):
-    file_name = download_file_from_onedrive(onedrive_shared_link)
-    with zipfile.ZipFile(file_name, 'r') as zip_ref:
-        zip_ref.extractall('data')
-    st.success(f'文件解压成功！')
 
 def get_saturated_vapor_pressure(temperature):#查询蒸汽压力
     # 参数：'P'表示压力，'T'表示温度，'Q'表示质量分数（0表示液相，1表示气相），'Water'表示水
@@ -579,6 +574,11 @@ def create_FlashEva_SteamComp(TG1,TG2,FalshEvapTG2,Tout1,Tout2,FalshEvapElect,St
 
 def main():
     st.title('余热产蒸汽系统')
+    if st.button("下载文件"):
+        file_name = download_file_from_onedrive(onedrive_shared_link)
+        with zipfile.ZipFile(file_name, 'r') as zip_ref:
+            zip_ref.extractall('data')
+        st.success(f'文件解压成功！')
     with st.sidebar:
         st.header('输入参数')
         input_variables = {}
