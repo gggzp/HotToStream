@@ -592,7 +592,7 @@ def create_FlashEva_SteamComp(TG1,TG2,FalshEvapTG2,Tout1,Tout2,FalshEvapElect,St
 
 def main():
     st.title('余热产蒸汽系统')
-    if file not in st.session_state:
+    if 'file' not in st.session_state:
         st.session_state['file'] = download_folder_from_onedrive(onedrive_shared_link)
         
     with st.sidebar:
