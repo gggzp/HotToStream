@@ -16,6 +16,27 @@ plt.rcParams['font.family'] = 'sans-serif'
 # 'axes.unicode_minus' 设置为False以确保负号可以正确显示
 plt.rcParams['axes.unicode_minus'] = False
 
+
+onedrive_shared_link = st.secrets['onedrive_shared_link']
+def download_file_from_onedrive(onedrive_shared_link):
+    # 获取文件名
+    file_name = onedrive_shared_link.split('/')[-1]
+
+    # 发送GET请求获取文件内容
+    response = requests.get(onedrive_shared_link)
+    response.raise_for_status()
+
+    # 将文件内容写入本地文件
+    with open(file_name, 'wb') as f:
+        f.write(response.content)
+    st.success(f'文件 {file_name} 下载成功！')
+    return file_name
+if st.button("下载文件"):
+    file_name = download_file_from_onedrive(onedrive_shared_link)
+    with zipfile.ZipFile(file_name, 'r') as zip_ref:
+        zip_ref.extractall('data')
+    st.success(f'文件解压成功！')
+
 def get_saturated_vapor_pressure(temperature):#查询蒸汽压力
     # 参数：'P'表示压力，'T'表示温度，'Q'表示质量分数（0表示液相，1表示气相），'Water'表示水
     pressure = PropsSI('P', 'T', temperature + 273.15, 'Q', 1, 'Water') / 1e6  # 将压力从帕斯卡（Pa）转换为兆帕（MPa）
