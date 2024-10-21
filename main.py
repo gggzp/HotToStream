@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 from CoolProp.CoolProp import PropsSI
 import streamlit as st
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, Arrow
 from cryptography.fernet import Fernet
