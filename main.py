@@ -605,7 +605,12 @@ def main():
 
         # 将文件内容存储在session_state中
         st.session_state['files_content'] = files_content
-
+        if 'RTGCrbf_model.joblib' in st.session_state['files_content']:
+            model = BytesIO(st.session_state['files_content']['RTGCrbf_model.joblib'])
+            joblib_model = load(model)
+            st.write("模型已加载")
+        else:
+            st.error("模型文件不存在")
 
     with st.sidebar:
         st.header('输入参数')
