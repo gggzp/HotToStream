@@ -10,6 +10,8 @@ from matplotlib.patches import FancyBboxPatch, Arrow
 import requests
 import zipfile
 import io
+from bs4 import BeautifulSoup
+
 
 # 设置matplotlib支持中文
 # 'font.sans-serif' 设置默认字体为支持中文的字体，这里使用黑体
@@ -21,19 +23,34 @@ plt.rcParams['axes.unicode_minus'] = False
 
 
 onedrive_shared_link = st.secrets['onedrive_shared_link']
-def download_file_from_onedrive(onedrive_shared_link):
-    # 获取文件名
-    file_name = onedrive_shared_link.split('/')[-1]
-
-    # 发送GET请求获取文件内容
+def download_folder_from_onedrive(onedrive_shared_link):
+    # 发送GET请求获取文件夹内容
     response = requests.get(onedrive_shared_link)
     response.raise_for_status()
 
-    # 将文件内容写入本地文件
-    with open(file_name, 'wb') as f:
-        f.write(response.content)
-    st.success(f'文件 {file_name} 下载成功！')
-    return file_name
+    # 解析HTML获取文件列表
+    soup = BeautifulSoup(response.text, 'html.parser')
+    items = soup.find_all('div', class_='fileLink')
+
+    # 用于存储文件名和文件内容的字典
+    files_content = {}
+
+    # 遍历文件列表并下载文件
+    for item in items:
+        file_url = item.find('a')['href']
+        file_name = file_url.split('/')[-1]
+        
+        # 发送GET请求获取文件内容
+        file_response = requests.get(file_url)
+        file_response.raise_for_status()
+        
+        # 将文件内容写入本地文件，并存储到字典中
+        with open(file_name, 'wb') as f:
+            f.write(file_response.content)
+        files_content[file_name] = file_response.content
+        st.write(file_name)
+
+    return files_content
 
 def get_saturated_vapor_pressure(temperature):#查询蒸汽压力
     # 参数：'P'表示压力，'T'表示温度，'Q'表示质量分数（0表示液相，1表示气相），'Water'表示水
@@ -578,9 +595,7 @@ def create_FlashEva_SteamComp(TG1,TG2,FalshEvapTG2,Tout1,Tout2,FalshEvapElect,St
 def main():
     st.title('余热产蒸汽系统')
     if st.button("下载文件"):
-        file_name = download_file_from_onedrive(onedrive_shared_link)
-        with zipfile.ZipFile(file_name, 'r') as zip_ref:
-            zip_ref.extractall('data')
+        file = download_folder_from_onedrive(onedrive_shared_link)
         st.success(f'文件解压成功！')
     with st.sidebar:
         st.header('输入参数')
