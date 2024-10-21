@@ -7,3 +7,4 @@ CoolProp
 matplotlib
 bs4
 cryptography
+io
