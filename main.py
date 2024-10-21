@@ -8,6 +8,8 @@ import streamlit as st
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, Arrow
 import requests
+import zipfile
+import io
 from bs4 import BeautifulSoup
 from io import BytesIO
 
@@ -188,7 +190,8 @@ def CentrifugalHeatPump (HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,Annua
         model=0
         Errordata="压比太低，无法使用离心热泵。尝试降低余热出口温度或提高余热产出温度"
     if model == 1:
-        joblib_model = st.session_state['RTGCrbf_model_joblib'] 
+        RTGCrbf_model=BytesIO(st.session_state['files_content'].get('RTGCrbf_model.joblib'))
+        joblib_model = load(RTGCrbf_model) 
         COP = joblib_model(TG2,Tout2)
         WasteHeat=(TG1-TG2)*HeatSourceFlow/10/0.086 #热源热量，单位kW
         Elect=WasteHeat/(COP-1) #耗电量
@@ -594,11 +597,11 @@ def main():
     if 'files_content' not in st.session_state:
         st.session_state['files_content'] = download_folder_from_onedrive(onedrive_shared_link)
         if st.session_state['files_content'] is None:
-            RTGCrbf_model=BytesIO(st.session_state['files_content'].get('RTGCrbf_model.joblib'))
+            #RTGCrbf_model=BytesIO(st.session_state['files_content'].get('RTGCrbf_model.joblib'))
             Comp_1rbf_model=BytesIO(st.session_state['files_content'].get('Comp_1rbf_model.joblib'))
             Comp_2rbf_model=BytesIO(st.session_state['files_content'].get('Comp_2rbf_model.joblib'))
             Comp_3rbf_model=BytesIO(st.session_state['files_content'].get('Comp_3rbf_model.joblib'))
-            st.session_state['RTGCrbf_model_joblib'] = load(RTGCrbf_model)
+            #st.session_state['RTGCrbf_model_joblib'] = load(RTGCrbf_model)
             st.session_state['Comp_1rbf_model_joblib'] = load(Comp_1rbf_model)
             st.session_state['Comp_2rbf_model_joblib'] = load(Comp_2rbf_model)
             st.session_state['Comp_3rbf_model_joblib'] = load(Comp_3rbf_model)
