@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from scipy.interpolate import Rbf
 import os
 from joblib import dump, load
@@ -326,13 +325,13 @@ def create_Abs_flowchart(TG1,TG2,Tout1,Tout2,TW1,TW2,ax): #单独吸收式热泵
     # 将方块添加到图表上
     ax.add_patch(Abs)
 
-    ax.text(0.3, 0.85, '余热出口：'+str(TG2)+'℃', ha='center', va='center', fontsize=8)
-    ax.text(0.3, 0.55, '余热入口：'+str(TG1)+'℃', ha='center', va='center', fontsize=8)
+    ax.text(0.3, 0.85, '余热出口：'+str(TG2)+'℃', ha='center', va='center', font=custom_font, fontsize=8)
+    ax.text(0.3, 0.55, '余热入口：'+str(TG1)+'℃', ha='center', va='center', font=custom_font, fontsize=8)
     # 可变文字部分，根据用户输入来显示
-    ax.text(0.5, 0.7, '吸收式热泵', ha='center', va='center', fontsize=12)
-    ax.text(0.7, 0.85, '产出蒸汽：'+str(Tout2)+'℃', ha='center', va='center', fontsize=8)
-    ax.text(0.7, 0.55, '补水：'+str(Tout1)+'℃', ha='center', va='center', fontsize=8)   
-    ax.text(0.5, 0.3, '冷却水温度：'+str(TW1)+'-'+str(TW2)+'℃', ha='center', va='center', fontsize=8)
+    ax.text(0.5, 0.7, '吸收式热泵', ha='center', va='center', font=custom_font, fontsize=12)
+    ax.text(0.7, 0.85, '产出蒸汽：'+str(Tout2)+'℃', ha='center', va='center', font=custom_font, fontsize=8)
+    ax.text(0.7, 0.55, '补水：'+str(Tout1)+'℃', ha='center', va='center', font=custom_font, fontsize=8)   
+    ax.text(0.5, 0.3, '冷却水温度：'+str(TW1)+'-'+str(TW2)+'℃', ha='center', va='center', font=custom_font, fontsize=8)
 
     arrowTG2 = Arrow(0.4, 0.8, -0.2, 0, width=0.05, color='#00CED1')
     arrowTG1 = Arrow(0.2, 0.6, 0.2, 0, width=0.05, color='#00CED1')
