@@ -16,29 +16,23 @@ from io import BytesIO
 
 onedrive_shared_link = st.secrets['onedrive_shared_link']
 def download_folder_from_onedrive(onedrive_shared_link):
-    # 发送GET请求获取文件夹内容
     response = requests.get(onedrive_shared_link)
     response.raise_for_status()
 
-    # 解析HTML获取文件列表
     soup = BeautifulSoup(response.text, 'html.parser')
     items = soup.find_all('div', class_='fileLink')
-
-    # 用于存储文件名和文件内容的字典
+    
     files_content = {}
-    try:
-        for item in items:
-            file_url = item.find('a')['href']
-            file_name = file_url.split('/')[-1]
-            st.write(file_name)
-            
-            file_response = requests.get(file_url)
-            file_response.raise_for_status()
-            
-            # 将文件内容存储到字典中，而不是写入本地文件
-            files_content[file_name] = file_response.content
-    except requests.RequestException as e:
-        st.error(f"下载文件时发生错误：{e}")
+    for item in items:
+        file_url = item.find('a')['href']
+        file_name = file_url.split('/')[-1]
+        print(f"Found file: {file_name}")  # Debug print
+        
+        file_response = requests.get(file_url)
+        file_response.raise_for_status()
+        
+        files_content[file_name] = file_response.content
+    
     return files_content
 
 
@@ -592,7 +586,12 @@ def main():
     if 'files_content' not in st.session_state:
         st.session_state['files_content'] = download_folder_from_onedrive(onedrive_shared_link)
         st.write('已从OneDrive下载文件')
-        st.write(st.session_state['files_content'])
+        
+        # 检查是否下载了文件
+        if st.session_state['files_content']:
+            st.write(list(st.session_state['files_content'].keys()))
+        else:
+            st.error('没有找到文件或无法下载文件')
 
     with st.sidebar:
         st.header('输入参数')
