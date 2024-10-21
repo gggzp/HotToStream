@@ -25,10 +25,10 @@ def download_folder_from_onedrive(onedrive_shared_link):
     
     return files_content
 # 在Streamlit应用中使用
-if 'files_content' not in st.session_state:
-    st.session_state['files_content'] = download_folder_from_onedrive(onedrive_shared_link)
+if st.button('从OneDrive下载文件'):
+    files_content= download_folder_from_onedrive(onedrive_shared_link)
     st.write('已从OneDrive下载文件')
-    
+    st.session_state['files_content']= files_content
     # 检查是否下载了文件
     if st.session_state['files_content']:
         st.write(list(st.session_state['files_content'].keys()))
