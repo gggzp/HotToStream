@@ -8,7 +8,7 @@ import streamlit as st
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, Arrow
 from cryptography.fernet import Fernet
-
+import io
 
 
 key=st.secrets["key"]
