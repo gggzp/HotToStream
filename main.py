@@ -605,10 +605,18 @@ def main():
 
         # 将文件内容存储在session_state中
         st.session_state['files_content'] = files_content
+        # 加载模型
         if 'RTGCrbf_model.joblib' in st.session_state['files_content']:
-            model = BytesIO(st.session_state['files_content']['RTGCrbf_model.joblib'])
-            joblib_model = load(model)
-            st.write("模型已加载")
+            # 使用 BytesIO 来包装二进制数据
+            model_data = BytesIO(st.session_state['files_content']['RTGCrbf_model.joblib'])
+            
+            # 确保在调用 load 之前，model_data 是 BytesIO 的实例
+            if isinstance(model_data, BytesIO):
+                # 加载模型
+                joblib_model = load(model_data)
+                st.write("模型已加载")
+            else:
+                st.error("模型数据不是有效的 BytesIO 对象")
         else:
             st.error("模型文件不存在")
 
