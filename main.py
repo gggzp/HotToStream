@@ -48,8 +48,6 @@ def download_folder_from_onedrive(onedrive_shared_link):
         with open(file_name, 'wb') as f:
             f.write(file_response.content)
         files_content[file_name] = file_response.content
-        st.write(file_name)
-
     return files_content
 
 def get_saturated_vapor_pressure(temperature):#查询蒸汽压力
@@ -191,7 +189,7 @@ def CentrifugalHeatPump (HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,Annua
         model=0
         Errordata="压比太低，无法使用离心热泵。尝试降低余热出口温度或提高余热产出温度"
     if model == 1:
-        joblib_model = load("Static\RTGCrbf_model.joblib")
+        joblib_model = st.session_state['files_content'].get('RTGCrbf_model.joblib',None)
         COP = joblib_model(TG2,Tout2)
         WasteHeat=(TG1-TG2)*HeatSourceFlow/10/0.086 #热源热量，单位kW
         Elect=WasteHeat/(COP-1) #耗电量
@@ -231,19 +229,19 @@ def SteamCompressor (HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,AnnualOpe
     else: 
         if CompressionRatio<=2:
             StageNumber=1
-            joblib_model = load("Static\压缩机1rbf_model.joblib")
+            joblib_model = st.session_state['files_content'].get('压缩机1rbf_model.joblib',None)
             Ratio=1.03
         elif CompressionRatio<=4:
             StageNumber=2
-            joblib_model = load("Static\压缩机2rbf_model.joblib") 
+            joblib_model = st.session_state['files_content'].get('压缩机2rbf_model.joblib',None)
             Ratio=1.0392
         elif CompressionRatio<=8:
             StageNumber=3
-            joblib_model = load("Static\压缩机3rbf_model.joblib")
+            joblib_model = st.session_state['files_content'].get('压缩机3rbf_model.joblib',None)
             Ratio=1.0583
         elif CompressionRatio<=16:
             StageNumber=4
-            joblib_model = load("Static\压缩机4rbf_model.joblib")
+            joblib_model = st.session_state['files_content'].get('压缩机4rbf_model.joblib',None)
             Ratio=1.0769
         else:
             StageNumber=0
@@ -594,9 +592,9 @@ def create_FlashEva_SteamComp(TG1,TG2,FalshEvapTG2,Tout1,Tout2,FalshEvapElect,St
 
 def main():
     st.title('余热产蒸汽系统')
-    if st.button("下载文件"):
-        file = download_folder_from_onedrive(onedrive_shared_link)
-        st.success(f'文件解压成功！')
+    if file not in st.session_state:
+        st.session_state['file'] = download_folder_from_onedrive(onedrive_shared_link)
+        
     with st.sidebar:
         st.header('输入参数')
         input_variables = {}
