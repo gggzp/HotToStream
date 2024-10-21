@@ -11,13 +11,14 @@ import requests
 import zipfile
 import io
 from bs4 import BeautifulSoup
+from io import BytesIO
 
 
 # 设置matplotlib支持中文
 # 'font.sans-serif' 设置默认字体为支持中文的字体，这里使用黑体
 plt.rcParams['font.sans-serif'] = ['SimHei']
 # 'font.family' 设置字体族为无衬线字体
-plt.rcParams['font.family'] = 'sans-serif'
+plt.rcParams['font.family'] = 'SimHei'
 # 'axes.unicode_minus' 设置为False以确保负号可以正确显示
 plt.rcParams['axes.unicode_minus'] = False
 
@@ -189,7 +190,7 @@ def CentrifugalHeatPump (HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,Annua
         model=0
         Errordata="压比太低，无法使用离心热泵。尝试降低余热出口温度或提高余热产出温度"
     if model == 1:
-        joblib_model = load(st.session_state['files_content'].get('RTGCrbf_model.joblib',None))
+        joblib_model = load(BytesIO(st.session_state['files_content'].get('RTGCrbf_model.joblib',None)))
         COP = joblib_model(TG2,Tout2)
         WasteHeat=(TG1-TG2)*HeatSourceFlow/10/0.086 #热源热量，单位kW
         Elect=WasteHeat/(COP-1) #耗电量
@@ -229,19 +230,19 @@ def SteamCompressor (HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,AnnualOpe
     else: 
         if CompressionRatio<=2:
             StageNumber=1
-            joblib_model = load(st.session_state['files_content'].get('压缩机1rbf_model.joblib',None))
+            joblib_model = load(BytesIO(load(st.session_state['files_content'].get('压缩机1rbf_model.joblib',None)))
             Ratio=1.03
         elif CompressionRatio<=4:
             StageNumber=2
-            joblib_model = load(st.session_state['files_content'].get('压缩机2rbf_model.joblib',None))
+            joblib_model = load(BytesIO(load(st.session_state['files_content'].get('压缩机2rbf_model.joblib',None)))
             Ratio=1.0392
         elif CompressionRatio<=8:
             StageNumber=3
-            joblib_model = load(st.session_state['files_content'].get('压缩机3rbf_model.joblib',None))
+            joblib_model = load(BytesIO(load(st.session_state['files_content'].get('压缩机3rbf_model.joblib',None)))
             Ratio=1.0583
         elif CompressionRatio<=16:
             StageNumber=4
-            joblib_model = load(st.session_state['files_content'].get('压缩机4rbf_model.joblib',None))
+            joblib_model = load(BytesIO(load(st.session_state['files_content'].get('压缩机4rbf_model.joblib',None)))
             Ratio=1.0769
         else:
             StageNumber=0
