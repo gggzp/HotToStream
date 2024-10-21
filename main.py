@@ -7,37 +7,45 @@ from CoolProp.CoolProp import PropsSI
 import streamlit as st
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, Arrow
-import requests
-import zipfile
-import io
-from bs4 import BeautifulSoup
-from io import BytesIO
+from cryptography.fernet import Fernet
 
-linkRTGC = st.secrets['linkRTGC']
-link1rbf = st.secrets['link1rbf']
-link2rbf = st.secrets['link2rbf']
-link3rbf = st.secrets['link3rbf']
-link4rbf = st.secrets['link4rbf']
+# 设置matplotlib支持中文
+# 'font.sans-serif' 设置默认字体为支持中文的字体，这里使用黑体
+plt.rcParams['font.sans-serif'] = ['SimHei']
+# 'font.family' 设置字体族为无衬线字体
+plt.rcParams['font.family'] = 'sans-serif'
+# 'axes.unicode_minus' 设置为False以确保负号可以正确显示
+plt.rcParams['axes.unicode_minus'] = False
 
-def download_folder_from_onedrive(onedrive_shared_link):
-    response = requests.get(onedrive_shared_link)
-    response.raise_for_status()
+key=st.secrets["key"]
+cipher_suite = Fernet(key)
 
-    soup = BeautifulSoup(response.text, 'html.parser')
-    items = soup.find_all('div', class_='fileLink')
+def decrypt_data(encrypted_data, cipher_suite):
+    try:
+        # 解密数据
+        decrypted_data = cipher_suite.decrypt(encrypted_data)
+        return decrypted_data
+    except Exception as e:
+        print(f"解密时发生错误: {e}")
+        return None
+
+def load_and_decrypt_model(model_filename):
+    # 加密模型文件路径
+    encrypted_model_path = os.path.join('static', model_filename)
     
-    files_content = {}
-    for item in items:
-        file_url = item.find('a')['href']
-        file_name = file_url.split('/')[-1]
-        print(f"Found file: {file_name}")  # Debug print
-        
-        file_response = requests.get(file_url)
-        file_response.raise_for_status()
-        
-        files_content[file_name] = file_response.content
+    # 读取加密的模型文件内容
+    with open(encrypted_model_path, 'rb') as file:
+        encrypted_model_data = file.read()
     
-    return files_content
+    # 解密模型数据
+    decrypted_model_data = decrypt_data(encrypted_model_data, cipher_suite)
+    
+    if decrypted_model_data is not None:
+        # 从解密的数据中加载模型
+        model = load(decrypted_model_data)
+        return model
+    else:
+        return None
 
 
 def get_saturated_vapor_pressure(temperature):#查询蒸汽压力
@@ -179,8 +187,11 @@ def CentrifugalHeatPump (HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,Annua
         model=0
         Errordata="压比太低，无法使用离心热泵。尝试降低余热出口温度或提高余热产出温度"
     if model == 1:
-        model=BytesIO(st.session_state['files_content'].get('RTGCrbf_model.joblib'))
-        joblib_model = load(model) 
+        # 加密模型文件名
+        encrypted_model_filename = "LockRTGCrbf_model.joblib"
+        # 加载并解密模型
+        joblib_model = load_and_decrypt_model(encrypted_model_filename)
+        #joblib_model = load("Static\RTGCrbf_model.joblib")
         COP = joblib_model(TG2,Tout2)
         WasteHeat=(TG1-TG2)*HeatSourceFlow/10/0.086 #热源热量，单位kW
         Elect=WasteHeat/(COP-1) #耗电量
@@ -220,23 +231,19 @@ def SteamCompressor (HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,AnnualOpe
     else: 
         if CompressionRatio<=2:
             StageNumber=1
-            model=BytesIO(st.session_state['files_content'].get('压缩机1rbf_model.joblib'))
-            joblib_model = load(model)
+            joblib_model = load("Static\压缩机1rbf_model.joblib")
             Ratio=1.03
         elif CompressionRatio<=4:
             StageNumber=2
-            model=BytesIO(st.session_state['files_content'].get('压缩机2rbf_model.joblib'))
-            joblib_model = load(model)
+            joblib_model = load("Static\压缩机2rbf_model.joblib") 
             Ratio=1.0392
         elif CompressionRatio<=8:
             StageNumber=3
-            model=BytesIO(st.session_state['files_content'].get('压缩机3rbf_model.joblib'))
-            joblib_model = load(model)
+            joblib_model = load("Static\压缩机3rbf_model.joblib")
             Ratio=1.0583
         elif CompressionRatio<=16:
             StageNumber=4
-            model=BytesIO(st.session_state['files_content'].get('压缩机4rbf_model.joblib'))
-            joblib_model = load(model)
+            joblib_model = load("Static\压缩机4rbf_model.joblib")
             Ratio=1.0769
         else:
             StageNumber=0
@@ -587,38 +594,6 @@ def create_FlashEva_SteamComp(TG1,TG2,FalshEvapTG2,Tout1,Tout2,FalshEvapElect,St
 
 def main():
     st.title('余热产蒸汽系统')
-    if 'files_content' not in st.session_state:
-        # 将所有链接存储在一个列表中
-        links = [linkRTGC, link1rbf, link2rbf, link3rbf, link4rbf]
-        file_names = ['RTGCrbf_model.joblib', '压缩机1rbf_model.joblib', '压缩机2rbf_model.joblib', '压缩机3rbf_model.joblib', '压缩机4rbf_model.joblib']
-
-        # 创建一个字典来存储文件内容和名称
-        files_content = {}
-
-        # 下载所有文件
-        for link, file_name in zip(links, file_names):
-            response = requests.get(link)
-            response.raise_for_status()  # 确保请求成功
-            files_content[file_name] = response.content
-            st.write(f"文件名: {file_name}")
-            st.write(f"文件大小: {len(response.content)} bytes")
-
-        # 将文件内容存储在session_state中
-        st.session_state['files_content'] = files_content
-        # 加载模型
-        if 'RTGCrbf_model.joblib' in st.session_state['files_content']:
-            # 使用 BytesIO 来包装二进制数据
-            try:
-                model_data =BytesIO(files_content['RTGCrbf_model.joblib'])
-                st.write("模型已加载")
-                st.write(model_data)
-                RTGCrbf_model = joblib.load(model_data)
-                st.write("模型已加载")
-            except Exception as e:
-                st.error("模型加载失败")
-        else:
-            st.error("模型文件不存在")
-
     with st.sidebar:
         st.header('输入参数')
         input_variables = {}
