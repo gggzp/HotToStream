@@ -7,6 +7,9 @@ from CoolProp.CoolProp import PropsSI
 import streamlit as st
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, Arrow
+import requests
+import zipfile
+import io
 
 # 设置matplotlib支持中文
 # 'font.sans-serif' 设置默认字体为支持中文的字体，这里使用黑体
