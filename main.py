@@ -22,7 +22,7 @@ def decrypt_data(encrypted_data, cipher_suite):
     except Exception as e:
         print(f"解密时发生错误: {e}")
         return None
-
+        
 def load_and_decrypt_model(model_filename):
     # 加密模型文件路径
     encrypted_model_path = os.path.join('static', model_filename)
@@ -35,8 +35,11 @@ def load_and_decrypt_model(model_filename):
     decrypted_model_data = decrypt_data(encrypted_model_data, cipher_suite)
     
     if decrypted_model_data is not None:
-        # 从解密的数据中加载模型
-        model = load(decrypted_model_data)
+        # 使用 io.BytesIO 来模拟文件对象
+        model_file = io.BytesIO(decrypted_model_data)
+        
+        # 从解密的数据加载模型
+        model = load(model_file)
         return model
     else:
         return None
