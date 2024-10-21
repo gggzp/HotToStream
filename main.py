@@ -589,7 +589,7 @@ def main():
     st.title('余热产蒸汽系统')
     if 'files_content' not in st.session_state:
         # 将所有链接存储在一个列表中
-        links = [link_RTGC, link_1rbf, link_2rbf, link_3rbf, link_4rbf]
+        links = [linkRTGC, link1rbf, link2rbf, link3rbf, link4rbf]
         file_names = ['RTGCrbf_model.joblib', '压缩机1rbf_model.joblib', '压缩机2rbf_model.joblib', '压缩机2rbf_model.joblib', '压缩机4rbf_model.joblib']
 
         # 创建一个字典来存储文件内容和名称
