@@ -602,7 +602,6 @@ def main():
             st.session_state['Comp_1rbf_model_joblib'] = load(Comp_1rbf_model)
             st.session_state['Comp_2rbf_model_joblib'] = load(Comp_2rbf_model)
             st.session_state['Comp_3rbf_model_joblib'] = load(Comp_3rbf_model)
-    else:
     with st.sidebar:
         st.header('输入参数')
         input_variables = {}
