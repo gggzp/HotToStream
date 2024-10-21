@@ -11,6 +11,16 @@ from matplotlib.patches import FancyBboxPatch, Arrow
 from cryptography.fernet import Fernet
 import io
 
+# 字体文件路径
+font_path = '思源黑体 CN Regular.otf'
+# 加载字体
+custom_font = load_font(font_path)
+plt.rcParams['font.sans-serif'] = custom_font
+# 'font.family' 设置字体族为无衬线字体
+plt.rcParams['font.family'] = 'sans-serif'
+# 'axes.unicode_minus' 设置为False以确保负号可以正确显示
+plt.rcParams['axes.unicode_minus'] = False
+
 key=st.secrets["key"]
 cipher_suite = Fernet(key)
 
