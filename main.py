@@ -38,7 +38,7 @@ def download_folder_from_onedrive(onedrive_shared_link):
 
 def main():
     st.title('余热产蒸汽系统')
-    if 'files_content' not in st.session_state:
+    if st.button('下载文件'):
         st.session_state['files_content'] = download_folder_from_onedrive(onedrive_shared_link)
         st.write('已从OneDrive下载文件')
         
