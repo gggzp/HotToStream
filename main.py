@@ -40,7 +40,7 @@ def download_folder_from_onedrive(onedrive_shared_link):
     for item in items:
         file_url = item.find('a')['href']
         file_name = file_url.split('/')[-1]
-        
+        st.write(file_name)
         # 发送GET请求获取文件内容
         file_response = requests.get(file_url)
         file_response.raise_for_status()
@@ -190,8 +190,8 @@ def CentrifugalHeatPump (HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,Annua
         model=0
         Errordata="压比太低，无法使用离心热泵。尝试降低余热出口温度或提高余热产出温度"
     if model == 1:
-        RTGCrbf_model=BytesIO(st.session_state['files_content'].get('RTGCrbf_model.joblib'))
-        joblib_model = load(RTGCrbf_model) 
+        model=BytesIO(st.session_state['files_content'].get('RTGCrbf_model.joblib'))
+        joblib_model = load(model) 
         COP = joblib_model(TG2,Tout2)
         WasteHeat=(TG1-TG2)*HeatSourceFlow/10/0.086 #热源热量，单位kW
         Elect=WasteHeat/(COP-1) #耗电量
@@ -231,19 +231,23 @@ def SteamCompressor (HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,AnnualOpe
     else: 
         if CompressionRatio<=2:
             StageNumber=1
-            joblib_model = st.session_state['Comp_1rbf_model_joblib']
+            model=BytesIO(st.session_state['files_content'].get('压缩机1rbf_model.joblib'))
+            joblib_model = load(model)
             Ratio=1.03
         elif CompressionRatio<=4:
             StageNumber=2
-            joblib_model = st.session_state['Comp_2rbf_model_joblib']
+            model=BytesIO(st.session_state['files_content'].get('压缩机2rbf_model.joblib'))
+            joblib_model = load(model)
             Ratio=1.0392
         elif CompressionRatio<=8:
             StageNumber=3
-            joblib_model = st.session_state['Comp_3rbf_model_joblib']
+            model=BytesIO(st.session_state['files_content'].get('压缩机3rbf_model.joblib'))
+            joblib_model = load(model)
             Ratio=1.0583
         elif CompressionRatio<=16:
             StageNumber=4
-            joblib_model = st.session_state['Comp_4rbf_model_joblib']
+            model=BytesIO(st.session_state['files_content'].get('压缩机4rbf_model.joblib'))
+            joblib_model = load(model)
             Ratio=1.0769
         else:
             StageNumber=0
@@ -596,17 +600,7 @@ def main():
     st.title('余热产蒸汽系统')
     if 'files_content' not in st.session_state:
         st.session_state['files_content'] = download_folder_from_onedrive(onedrive_shared_link)
-        if st.session_state['files_content'] is None:
-            #RTGCrbf_model=BytesIO(st.session_state['files_content'].get('RTGCrbf_model.joblib'))
-            Comp_1rbf_model=BytesIO(st.session_state['files_content'].get('Comp_1rbf_model.joblib'))
-            Comp_2rbf_model=BytesIO(st.session_state['files_content'].get('Comp_2rbf_model.joblib'))
-            Comp_3rbf_model=BytesIO(st.session_state['files_content'].get('Comp_3rbf_model.joblib'))
-            #st.session_state['RTGCrbf_model_joblib'] = load(RTGCrbf_model)
-            st.session_state['Comp_1rbf_model_joblib'] = load(Comp_1rbf_model)
-            st.session_state['Comp_2rbf_model_joblib'] = load(Comp_2rbf_model)
-            st.session_state['Comp_3rbf_model_joblib'] = load(Comp_3rbf_model)
-        else:
-            st.header('文件下载失败，请检查网络连接')
+
     with st.sidebar:
         st.header('输入参数')
         input_variables = {}
