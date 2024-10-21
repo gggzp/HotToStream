@@ -8,7 +8,7 @@ import streamlit as st
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, Arrow
 from cryptography.fernet import Fernet
-
+import io
 
 key=st.secrets["key"]
 cipher_suite = Fernet(key)
@@ -25,7 +25,7 @@ def decrypt_data(encrypted_data, cipher_suite):
 def load_and_decrypt_model(model_filename):
     # 加密模型文件路径
     encrypted_model_path = os.path.join('static', model_filename)
-    
+    st.write(encrypted_model_path)
     # 读取加密的模型文件内容
     with open(encrypted_model_path, 'rb') as file:
         encrypted_model_data = file.read()
