@@ -18,7 +18,7 @@ from io import BytesIO
 # 'font.sans-serif' 设置默认字体为支持中文的字体，这里使用黑体
 plt.rcParams['font.sans-serif'] = ['SimHei']
 # 'font.family' 设置字体族为无衬线字体
-plt.rcParams['font.family'] = 'SimHei'
+plt.rcParams['font.family'] = ['SimHei']
 # 'axes.unicode_minus' 设置为False以确保负号可以正确显示
 plt.rcParams['axes.unicode_minus'] = False
 
@@ -35,21 +35,21 @@ def download_folder_from_onedrive(onedrive_shared_link):
 
     # 用于存储文件名和文件内容的字典
     files_content = {}
-
-    # 遍历文件列表并下载文件
-    for item in items:
-        file_url = item.find('a')['href']
-        file_name = file_url.split('/')[-1]
-        st.write(file_name)
-        # 发送GET请求获取文件内容
-        file_response = requests.get(file_url)
-        file_response.raise_for_status()
-        
-        # 将文件内容写入本地文件，并存储到字典中
-        with open(file_name, 'wb') as f:
-            f.write(file_response.content)
-        files_content[file_name] = file_response.content
+    try:
+        for item in items:
+            file_url = item.find('a')['href']
+            file_name = file_url.split('/')[-1]
+            st.write(file_name)
+            
+            file_response = requests.get(file_url)
+            file_response.raise_for_status()
+            
+            # 将文件内容存储到字典中，而不是写入本地文件
+            files_content[file_name] = file_response.content
+    except requests.RequestException as e:
+        st.error(f"下载文件时发生错误：{e}")
     return files_content
+
 
 def get_saturated_vapor_pressure(temperature):#查询蒸汽压力
     # 参数：'P'表示压力，'T'表示温度，'Q'表示质量分数（0表示液相，1表示气相），'Water'表示水
