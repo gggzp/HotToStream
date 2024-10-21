@@ -609,7 +609,7 @@ def main():
         if 'RTGCrbf_model.joblib' in st.session_state['files_content']:
             # 使用 BytesIO 来包装二进制数据
             try:
-                model_data =BytesIO(st.session_state['files_content']['RTGCrbf_model.joblib'])
+                model_data =BytesIO(files_content['RTGCrbf_model.joblib'])
                 st.write("模型已加载")
                 st.write(model_data)
                 RTGCrbf_model = joblib.load(model_data)
