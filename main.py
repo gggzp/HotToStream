@@ -9,13 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, Arrow
 from cryptography.fernet import Fernet
 
-# 设置matplotlib支持中文
-# 'font.sans-serif' 设置默认字体为支持中文的字体，这里使用黑体
-plt.rcParams['font.sans-serif'] = ['SimHei']
-# 'font.family' 设置字体族为无衬线字体
-plt.rcParams['font.family'] = 'sans-serif'
-# 'axes.unicode_minus' 设置为False以确保负号可以正确显示
-plt.rcParams['axes.unicode_minus'] = False
+
 
 key=st.secrets["key"]
 cipher_suite = Fernet(key)
@@ -231,19 +225,31 @@ def SteamCompressor (HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,AnnualOpe
     else: 
         if CompressionRatio<=2:
             StageNumber=1
-            joblib_model = load("Static\压缩机1rbf_model.joblib")
+            encrypted_model_filename = "Lock压缩机1rbf_model.joblib"
+            # 加载并解密模型
+            joblib_model = load_and_decrypt_model(encrypted_model_filename)
+            #joblib_model = load("Static\压缩机1rbf_model.joblib")
             Ratio=1.03
         elif CompressionRatio<=4:
             StageNumber=2
-            joblib_model = load("Static\压缩机2rbf_model.joblib") 
+            encrypted_model_filename = "Lock压缩机2rbf_model.joblib"
+            # 加载并解密模型
+            joblib_model = load_and_decrypt_model(encrypted_model_filename)
+            #joblib_model = load("Static\压缩机2rbf_model.joblib") 
             Ratio=1.0392
         elif CompressionRatio<=8:
             StageNumber=3
-            joblib_model = load("Static\压缩机3rbf_model.joblib")
+            encrypted_model_filename = "Lock压缩机3rbf_model.joblib"
+            # 加载并解密模型
+            joblib_model = load_and_decrypt_model(encrypted_model_filename)
+            #joblib_model = load("Static\压缩机3rbf_model.joblib")
             Ratio=1.0583
         elif CompressionRatio<=16:
             StageNumber=4
-            joblib_model = load("Static\压缩机4rbf_model.joblib")
+            encrypted_model_filename = "Lock压缩机4rbf_model.joblib"
+            # 加载并解密模型
+            joblib_model = load_and_decrypt_model(encrypted_model_filename)
+            #joblib_model = load("Static\压缩机4rbf_model.joblib")
             Ratio=1.0769
         else:
             StageNumber=0
