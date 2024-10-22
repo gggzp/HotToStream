@@ -17,6 +17,443 @@ font_prop = font_manager.FontProperties(fname=font_path)
 
 key=st.secrets["key"]
 cipher_suite = Fernet(key)
+# 定义用户名和密码
+USERNAME = st.secrets["USERNAME"]
+PASSWORD = st.secrets["PASSWORD"]
+
+# 定义一个函数来切换页面
+def switch_page(page_name):
+    st.session_state.selected_page = page_name
+
+# 定义页面函数
+def page0():
+    st.title('登录界面')
+    st.write('请输入用户名和密码登录')
+    user_input = st.text_input(label="用户名", type="default")
+    password_input = st.text_input(label="密码", type="password")
+
+    if st.button('点击2次以登录'):  
+        if user_input == USERNAME and password_input == PASSWORD:
+            st.success('登录成功！')
+            switch_page('登录后')
+        else:
+            st.error('用户名或密码错误，请重试。')
+
+def page1():
+    st.title('余热产蒸汽系统')
+    with st.sidebar:
+        st.header('输入参数')
+        input_variables = {}
+        col0,col1 = st.columns(2)
+        with col0:
+            input_variables['HeatSourceType'] = st.radio( "请选择余热类型：", ('蒸汽', '热水'))
+        with col1:
+            input_variables['HeatSourceFlow'] = st.number_input('余热流量t/h:', value=25.0, step=1.0)
+
+        col0, col1= st.columns(2)
+        with col0:
+            input_variables['TG1'] = st.number_input('余热入口温度:', value=90.0, step=1.0)
+            input_variables['TW1'] = st.number_input('冷却水入口:', value=32.0, step=1.0)
+            input_variables['Tout1'] = st.number_input('补水温度:', value=90.0, step=1.0)
+
+        with col1: # 第一列
+            input_variables['TG2'] = st.number_input('余热出口温度:', value=80.0, step=1.0)            
+            input_variables['TW2'] = st.number_input('冷却水出口:', value=40.0, step=1.0)
+            input_variables['Tout2'] = st.number_input('产出温度:', value=120.0, step=1.0)
+        
+        cola, colb= st.columns(2)
+        with cola: # 第1列
+            input_variables['AnnualOperatingHours'] = st.number_input('年运行时长 h', value=8000.0, step=1.0)
+            input_variables['SteamUnitPrice'] = st.number_input('蒸汽单价 元/吨:', value=100.0, step=1.0)
+        with colb: # 第2列
+            input_variables['ElectricityUnitPrice'] = st.number_input('电价:', value=0.5, step=0.1)
+            input_variables['CoolingWaterUnitPrice'] = st.number_input('冷却水单价:', value=0.4, step=0.1)
+        instructions = (                                                                    #使用说明
+                        "1.该工具从余热量推算制热量，制取饱和蒸汽，流量单位均为t/h;<br>"
+                        "2.余热类型选择蒸汽或热水，余热品味均以温度表示，热源蒸汽为饱和蒸汽;<br>"
+                        "3.如果余热为蒸汽，则余热出口为与入口温度相同的饱和水;<br>"
+                        "4.第二类吸收式热泵需要冷却水;<br>"
+                        "5.涉及到双设备串联的系统，需要手动调整串联设备时间的‘中间温度’;<br>"
+                        "6.如果需要计算投资回报期，则需要输入设备投资成本;<br>"
+                        "7.如有使用问题，或有功能需求，联系 国志鹏 。<br>"
+                        "————2024-10-08"
+                        )
+                        
+        st.markdown("___")
+        st.write('使用说明：')
+        st.caption(instructions, unsafe_allow_html=True)
+    if input_variables['HeatSourceType'] is not None:
+        HeatSourceType=input_variables['HeatSourceType']
+        TG1=input_variables['TG1']
+        TG2=input_variables['TG2']
+        Tout1=input_variables['Tout1']
+        Tout2=input_variables['Tout2']
+        HeatSourceFlow=input_variables['HeatSourceFlow']
+        AnnualOperatingHours=input_variables['AnnualOperatingHours']
+        ElectricityUnitPrice=input_variables['ElectricityUnitPrice']
+        SteamUnitPrice=input_variables['SteamUnitPrice']
+        CoolingWaterUnitPrice=input_variables['CoolingWaterUnitPrice']
+        TW1=input_variables['TW1']
+        TW2=input_variables['TW2']
+
+    if HeatSourceType == '蒸汽':
+        TG2=TG1
+        #单独吸收式热泵
+        st.subheader('单独吸收式热泵')
+        AbsAloneResult = AbsorptionHeatPump(HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
+        if AbsAloneResult['model'] == 1:
+            input_variables['ABsInvestmentCost'] = st.number_input('吸收式热泵投资成本 万元', value=0.0, step=100.0,key='吸收式热泵投资成本 万元')
+            AbsAStreamFlow = AbsAloneResult['蒸汽流量']
+            AbsACoolingWaterFlow = AbsAloneResult['冷却水流量']
+            AbsACoolingWaterCost = AbsAloneResult['冷却水成本']
+            AbsSteamCost = AbsAloneResult['产蒸汽收益']
+            AbsNetIncome = AbsAloneResult['净收益']
+            AbsNetIncomePerStream = AbsAloneResult['每吨蒸汽收益']
+            PaybackPeriodAbs = input_variables['ABsInvestmentCost']/AbsNetIncome #回报期 年
+            # 创建一个包含三个列的列表显示
+            cols = st.columns(4)
+            # 第一行
+            cols[0].metric(label="蒸汽流量t/h", value='{:.2f}'.format(AbsAloneResult['蒸汽流量']))
+            cols[1].metric(label="冷却水流量", value='{:.0f}'.format(AbsAloneResult['冷却水流量']))
+            cols[2].metric(label="净收益 万元", value='{:.0f}'.format(AbsAloneResult['净收益']))
+            cols[3].metric(label="回报期 年", value='{:.2f}'.format(PaybackPeriodAbs))
+
+            # 第二行
+            cols[0].metric(label="产蒸汽收益 万元", value='{:.0f}'.format(AbsAloneResult['产蒸汽收益']))
+            cols[1].metric(label="冷却水成本 万元", value='{:.0f}'.format(AbsAloneResult['冷却水成本']))
+            cols[2].metric(label="每吨蒸汽收益 万元", value='{:.0f}'.format(AbsAloneResult['每吨蒸汽收益']))   
+            # 使用用户输入的文字创建流程图
+            fig, ax = plt.subplots(figsize=(6, 2))
+            create_Abs_flowchart(TG1,TG2,Tout1,Tout2,TW1,TW2, ax)
+            st.pyplot(fig)
+        else:
+            st.write(AbsAloneResult['Errordata'])
+        st.markdown("___")
+        st.subheader('单独蒸汽压缩机')
+        SteamCompressorAloneResult = SteamCompressor(HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
+        if SteamCompressorAloneResult['model'] == 1:
+            input_variables['StCpInvestmentCost'] = st.number_input('蒸汽压缩机投资成本 万元', value=0.0, step=100.0,key='蒸汽压缩机投资成本 万元')            
+            StCompStreamFlow = SteamCompressorAloneResult['蒸汽流量']
+            StCompElect = SteamCompressorAloneResult['耗电量']
+            StCompOperatingCost = SteamCompressorAloneResult['耗电成本']
+            StCompSteamCost = SteamCompressorAloneResult['产蒸汽收益']
+            StCompNetIncome = SteamCompressorAloneResult['净收益']
+            StCompNetIncomePerStream = SteamCompressorAloneResult['每吨蒸汽收益']
+            StCompStageNumber = SteamCompressorAloneResult['级数']
+            PaybackPeriodSteamCompressor = input_variables['StCpInvestmentCost']/StCompNetIncome #回报期 年
+
+            cols = st.columns(4)
+            # 第一行
+            cols[0].metric(label="蒸汽流量t/h", value='{:.2f}'.format(SteamCompressorAloneResult['蒸汽流量']))
+            cols[1].metric(label="耗电量 kW", value='{:.0f}'.format(SteamCompressorAloneResult['耗电量']))
+            cols[2].metric(label="净收益 万元", value='{:.0f}'.format(SteamCompressorAloneResult['净收益']))
+            cols[3].metric(label="回报期 年", value='{:.2f}'.format(PaybackPeriodSteamCompressor))
+
+            # 第二行
+            cols[0].metric(label="产蒸汽收益 万元", value='{:.0f}'.format(SteamCompressorAloneResult['产蒸汽收益']))
+            cols[1].metric(label="耗电成本 万元", value='{:.0f}'.format(SteamCompressorAloneResult['耗电成本']))
+            cols[2].metric(label="每吨蒸汽收益 万元", value='{:.0f}'.format(SteamCompressorAloneResult['每吨蒸汽收益']))
+            cols[3].metric(label="级数", value='{:.0f}'.format(SteamCompressorAloneResult['级数']))
+            # 使用用户输入的文字创建流程图
+            fig, ax = plt.subplots(figsize=(6, 2))
+            create_SteamCompressor_flowchart(TG1,TG2,Tout2,StCompElect, ax)
+            st.pyplot(fig)
+        else:
+            st.write(SteamCompressorAloneResult['Errordata'])
+        
+        st.markdown("___")
+        st.subheader('吸收式热泵串联蒸汽压缩机')
+        colsInvestmentCost = st.columns(3)
+        # 第一行
+        with colsInvestmentCost[0]:
+            input_variables['ABsInvestmentCost2'] = st.number_input('吸收式热泵投资成本 万元', value=0.0, step=100.0,key='吸收式热泵投资成本2 万元')
+        with colsInvestmentCost[1]:
+            input_variables['StCpInvestmentCost2'] = st.number_input('蒸汽压缩机投资成本 万元', value=0.0, step=100.0,key='蒸汽压缩机2投资成本2 万元')
+        with colsInvestmentCost[2]:
+            input_variables['Tmiddle'] = st.number_input('中间温度 ℃', value=TG2+40, step=1.0)
+
+        AbsAloneResult2 = AbsorptionHeatPump(HeatSourceType,TG1,TG2,Tout1,input_variables['Tmiddle'],HeatSourceFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
+        if AbsAloneResult2['model']==1:    
+            AbsAStreamFlow2 = AbsAloneResult2['蒸汽流量']
+            AbsACoolingWaterFlow2 = AbsAloneResult2['冷却水流量']
+            AbsACoolingWaterCost2 = AbsAloneResult2['冷却水成本']
+            AbsSteamCost2 = AbsAloneResult2['产蒸汽收益']
+            AbsNetIncome2 = AbsAloneResult2['净收益']
+            AbsNetIncomePerStream2 = AbsAloneResult2['每吨蒸汽收益']
+            SteamCompressorAloneResult2 = SteamCompressor(HeatSourceType,input_variables['Tmiddle'],TG2,Tout1,Tout2,AbsAStreamFlow2,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
+            if SteamCompressorAloneResult2['model']==1:
+                StCompStreamFlow2 = SteamCompressorAloneResult2['蒸汽流量']
+                StCompElect2 = SteamCompressorAloneResult2['耗电量']
+                StCompOperatingCost2 = SteamCompressorAloneResult2['耗电成本']
+                StCompSteamCost2 = SteamCompressorAloneResult2['产蒸汽收益']
+                StCompNetIncome2 = SteamCompressorAloneResult2['净收益']
+                StCompStageNumber2 = SteamCompressorAloneResult2['级数']
+                StCompNetIncome2=StCompNetIncome2-AbsACoolingWaterCost2 #压缩机蒸汽收益减去二类热泵循环水成本
+                StCompNetIncomePerStream2=StCompNetIncome2/StCompStreamFlow2 #重新计算每吨蒸汽收益
+                PaybackPeriodAbsAndStComp = (input_variables['ABsInvestmentCost2']+input_variables['StCpInvestmentCost2'])/StCompNetIncome2 #回报期 年
+
+                cols = st.columns(4)
+                # 第一行
+                cols[0].metric(label="蒸汽流量t/h", value='{:.2f}'.format(SteamCompressorAloneResult2['蒸汽流量']))
+                cols[1].metric(label="耗电量 kW", value='{:.0f}'.format(SteamCompressorAloneResult2['耗电量']))
+                cols[2].metric(label="净收益 万元", value='{:.0f}'.format(StCompNetIncome2))
+                cols[3].metric(label="回报期 年", value='{:.2f}'.format(PaybackPeriodAbsAndStComp))
+
+                # 第二行
+                cols[0].metric(label="产蒸汽收益 万元", value='{:.0f}'.format(SteamCompressorAloneResult2['产蒸汽收益']))
+                cols[1].metric(label="耗电成本 万元", value='{:.0f}'.format(SteamCompressorAloneResult2['耗电成本']))
+                cols[2].metric(label="每吨蒸汽收益 万元", value='{:.0f}'.format(StCompNetIncomePerStream2))
+                # 第三行
+                cols[0].metric(label="级数", value='{:.0f}'.format(SteamCompressorAloneResult2['级数']))
+                cols[1].metric(label="冷却水流量", value='{:.0f}'.format(AbsAloneResult2['冷却水流量']))
+                cols[2].metric(label="冷却水成本 万元", value='{:.0f}'.format(AbsAloneResult2['冷却水成本']))
+                # 使用用户输入的文字创建流程图
+                fig, ax = plt.subplots(figsize=(6, 2))
+                create_Abs_SteamCompressor_flowchart(TG1,TG2,input_variables['Tmiddle'],Tout1,Tout2,StCompElect2,TW1,TW2,ax)
+                st.pyplot(fig)
+            else :
+                st.write(SteamCompressorAloneResult2['Errordata'])
+        else :
+            st.write(AbsAloneResult2['Errordata'])
+
+    elif HeatSourceType == '热水':
+            #单独吸收式热泵
+        st.subheader('单独吸收式热泵')
+        AbsAloneResult = AbsorptionHeatPump(HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
+        if AbsAloneResult['model']==1:
+            AbsAStreamFlow = AbsAloneResult['蒸汽流量']
+            AbsACoolingWaterFlow = AbsAloneResult['冷却水流量']
+            AbsACoolingWaterCost = AbsAloneResult['冷却水成本']
+            AbsSteamCost = AbsAloneResult['产蒸汽收益']
+            AbsNetIncome = AbsAloneResult['净收益']
+            AbsNetIncomePerStream = AbsAloneResult['每吨蒸汽收益']
+            input_variables['ABsInvestmentCost3'] = st.number_input('吸收式热泵投资成本 万元', value=0.0, step=100.0,key='吸收式热泵投资成本 万元')
+            PaybackPeriodAbs = input_variables['ABsInvestmentCost3']/AbsNetIncome #回报期 年
+
+            # 创建一个包含三个列的列表显示
+            cols = st.columns(4)
+            # 第一行
+            cols[0].metric(label="蒸汽流量t/h", value='{:.2f}'.format(AbsAloneResult['蒸汽流量']))
+            cols[1].metric(label="冷却水流量", value='{:.0f}'.format(AbsAloneResult['冷却水流量']))
+            cols[2].metric(label="净收益 万元", value='{:.0f}'.format(AbsAloneResult['净收益']))
+            cols[3].metric(label="回报期 年", value='{:.2f}'.format(PaybackPeriodAbs))
+
+            # 第二行
+            cols[0].metric(label="产蒸汽收益 万元", value='{:.0f}'.format(AbsAloneResult['产蒸汽收益']))
+            cols[1].metric(label="冷却水成本 万元", value='{:.0f}'.format(AbsAloneResult['冷却水成本']))
+            cols[2].metric(label="每吨蒸汽收益 万元", value='{:.0f}'.format(AbsAloneResult['每吨蒸汽收益']))
+                        # 使用用户输入的文字创建流程图
+            fig, ax = plt.subplots(figsize=(6, 2))
+            create_Abs_flowchart(TG1,TG2,Tout1,Tout2,TW1,TW2, ax)
+            st.pyplot(fig)
+        else :
+            st.write(AbsAloneResult['Errordata'])
+
+        st.markdown("___")
+        st.subheader('单独离心热泵')
+        CtHeatPumpResult = CentrifugalHeatPump(HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
+        if CtHeatPumpResult['model']==1:
+            #单独离心热泵
+            input_variables['HeatPumpInvestmentCost2'] = st.number_input('离心式热泵投资成本 万元', value=0.0, step=100.0,key='离心式热泵投资成本 万元')
+
+            CtHeatPumpStreamFlow = CtHeatPumpResult['蒸汽流量']
+            CtHeatPumpElect = CtHeatPumpResult['耗电量']
+            CtHeatPumpOperatingCost = CtHeatPumpResult['耗电成本']
+            CtHeatPumpSteamCost = CtHeatPumpResult['产蒸汽收益']
+            CtHeatPumpNetIncome = CtHeatPumpResult['净收益']
+            CtHeatPumpNetIncomePerStream = CtHeatPumpResult['每吨蒸汽收益']
+            PaybackPeriodCt = input_variables['HeatPumpInvestmentCost2']/CtHeatPumpNetIncome #回报期 年   
+
+            cols = st.columns(4)
+            # 第一行
+            cols[0].metric(label="蒸汽流量t/h", value='{:.2f}'.format(CtHeatPumpResult['蒸汽流量']))
+            cols[1].metric(label="耗电量", value='{:.0f}'.format(CtHeatPumpResult['耗电量']))
+            cols[2].metric(label="净收益 万元", value='{:.0f}'.format(CtHeatPumpResult['净收益']))
+            cols[3].metric(label="回报期 年", value='{:.2f}'.format(PaybackPeriodCt))
+
+            # 第二行
+            cols[0].metric(label="产蒸汽收益 万元", value='{:.0f}'.format(CtHeatPumpResult['产蒸汽收益']))
+            cols[1].metric(label="耗电成本 万元", value='{:.0f}'.format(CtHeatPumpResult['耗电成本']))
+            cols[2].metric(label="每吨蒸汽收益 万元", value='{:.0f}'.format(CtHeatPumpResult['每吨蒸汽收益']))
+            cols[3].metric(label="离心热泵COP", value='{:.0f}'.format(CtHeatPumpResult['COP']))
+            # 使用用户输入的文字创建流程图
+            fig, ax = plt.subplots(figsize=(6, 2))
+            create_CentrifugalHeatPump(TG1,TG2,Tout1,Tout2,CtHeatPumpElect, ax)
+            st.pyplot(fig)
+        else :
+            st.write(CtHeatPumpResult['Errordata'])
+
+
+        st.markdown("___")
+        st.subheader('吸收式热泵串联蒸汽压缩机') #吸收式热泵串联蒸汽压缩机
+        colsInvestmentCost = st.columns(3)
+        with colsInvestmentCost[0]:
+            input_variables['ABsInvestmentCost4'] = st.number_input('吸收式热泵投资成本 万元', value=0.0, step=100.0,key='吸收式热泵投资成本3 万元')
+        with colsInvestmentCost[1]:
+            input_variables['StCpInvestmentCost4'] = st.number_input('蒸汽压缩机投资成本 万元', value=0.0, step=100.0,key='蒸汽压缩机投资成本3 万元')
+        with colsInvestmentCost[2]:
+            input_variables['Tmiddle'] = st.number_input('中间温度 ℃', value=TG2+40, step=1.0,key='中间温度2 ℃')
+        AbsAloneResult2 = AbsorptionHeatPump(HeatSourceType,TG1,TG2,Tout1,input_variables['Tmiddle'],HeatSourceFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
+        if AbsAloneResult2['model']==1:
+            AbsAStreamFlow2 = AbsAloneResult2['蒸汽流量']
+            AbsACoolingWaterFlow2 = AbsAloneResult2['冷却水流量']
+            AbsACoolingWaterCost2 = AbsAloneResult2['冷却水成本']
+            AbsSteamCost2 = AbsAloneResult2['产蒸汽收益']
+            AbsNetIncome2 = AbsAloneResult2['净收益']
+            AbsNetIncomePerStream2 = AbsAloneResult2['每吨蒸汽收益']
+            SteamCompressorAloneResult22 = SteamCompressor(HeatSourceType,input_variables['Tmiddle'],TG2,Tout1,Tout2,AbsAStreamFlow2,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
+            if SteamCompressorAloneResult22['model'] == 1:
+                StCompStreamFlow2 = SteamCompressorAloneResult22['蒸汽流量']
+                StCompElect2 = SteamCompressorAloneResult22['耗电量']
+                StCompOperatingCost2 = SteamCompressorAloneResult22['耗电成本']
+                StCompSteamCost2 = SteamCompressorAloneResult22['产蒸汽收益']
+                StCompNetIncome2 = SteamCompressorAloneResult22['净收益']
+                StCompNetIncomePerStream2 = SteamCompressorAloneResult22['每吨蒸汽收益']
+                StCompStageNumber2 = SteamCompressorAloneResult22['级数']
+                StCompNetIncome2=StCompNetIncome2-AbsACoolingWaterCost2 #压缩机蒸汽收益减去二类热泵循环水成本
+                StCompNetIncomePerStream2=StCompNetIncome2/StCompStreamFlow2 #重新计算每吨蒸汽收益
+                PaybackPeriodAbsAndStComp = (input_variables['ABsInvestmentCost4']+input_variables['StCpInvestmentCost4'])/StCompNetIncome2 #回报期 年
+
+                cols = st.columns(4)
+                # 第一行
+                cols[0].metric(label="蒸汽流量t/h", value='{:.2f}'.format(SteamCompressorAloneResult22['蒸汽流量']))
+                cols[1].metric(label="耗电量", value='{:.0f}'.format(SteamCompressorAloneResult22['耗电量']))
+                cols[2].metric(label="净收益 万元", value='{:.0f}'.format(StCompNetIncome2))
+                cols[3].metric(label="回报期 年", value='{:.2f}'.format(PaybackPeriodAbsAndStComp))
+
+                # 第二行
+                cols[0].metric(label="产蒸汽收益 万元", value='{:.0f}'.format(SteamCompressorAloneResult22['产蒸汽收益']))
+                cols[1].metric(label="耗电成本 万元", value='{:.0f}'.format(SteamCompressorAloneResult22['耗电成本']))
+                cols[2].metric(label="每吨蒸汽收益 万元", value='{:.0f}'.format(StCompNetIncomePerStream2))
+                # 第三行
+                cols[0].metric(label="级数", value='{:.0f}'.format(SteamCompressorAloneResult22['级数']))
+                cols[1].metric(label="冷却水流量", value='{:.0f}'.format(AbsAloneResult2['冷却水流量']))
+                cols[2].metric(label="冷却水成本 万元", value='{:.0f}'.format(AbsAloneResult2['冷却水成本']))
+                # 使用用户输入的文字创建流程图
+                fig, ax = plt.subplots(figsize=(6, 2))
+                create_Abs_SteamCompressor_flowchart(TG1,TG2,input_variables['Tmiddle'],Tout1,Tout2,StCompElect2,TW1,TW2,ax)
+                st.pyplot(fig)
+            else:
+                st.write(SteamCompressorAloneResult22['Errordata'])
+        else:
+            st.write(AbsAloneResult2['Errordata'])
+
+        st.markdown("___")
+        st.subheader('离心热泵串联蒸汽压缩机')            #离心热泵串联蒸汽压缩机
+        colsInvestmentCost = st.columns(3)
+        # 第一行
+        with colsInvestmentCost[0]:
+            input_variables['HeatPumpInvestmentCost5'] = st.number_input('离心热泵投资成本 万元', value=0.0, step=100.0,key='离心热泵投资成本4 万元')
+        with colsInvestmentCost[1]:
+            input_variables['StCpInvestmentCost5'] = st.number_input('蒸汽压缩机投资成本 万元', value=0.0, step=100.0,key='蒸汽压缩机投资成本4 万元')
+        with colsInvestmentCost[2]:
+            input_variables['Tmiddle'] = st.number_input('中间温度 ℃', value=TG2+20, step=1.0,key='中间温度3 ℃')
+        CtHeatPumpResult2 = CentrifugalHeatPump(HeatSourceType,TG1,TG2,Tout1,input_variables['Tmiddle'],HeatSourceFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
+        if CtHeatPumpResult2['model']==1:
+            CtHeatPumpStreamFlow2 = CtHeatPumpResult2['蒸汽流量']
+            CtHeatPumpElect2 = CtHeatPumpResult2['耗电量']
+            CtHeatPumpOperatingCost2 = CtHeatPumpResult2['耗电成本']
+            CtHeatPumpSteamCost2 = CtHeatPumpResult2['产蒸汽收益']
+            CtHeatPumpNetIncome2 = CtHeatPumpResult2['净收益']
+            CtHeatPumpNetIncomePerStream2 = CtHeatPumpResult2['每吨蒸汽收益']
+            SteamCompressorAloneResult = SteamCompressor(HeatSourceType,input_variables['Tmiddle'],TG2,Tout1,Tout2,CtHeatPumpStreamFlow2,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
+            if SteamCompressorAloneResult['model']==1:
+                StCompStreamFlow = SteamCompressorAloneResult['蒸汽流量']
+                StCompElect = SteamCompressorAloneResult['耗电量']
+                StCompOperatingCost = SteamCompressorAloneResult['耗电成本']
+                StCompSteamCost = SteamCompressorAloneResult['产蒸汽收益']
+                StCompNetIncome = SteamCompressorAloneResult['净收益']
+                StCompNetIncomePerStream = SteamCompressorAloneResult['每吨蒸汽收益']
+                StCompStageNumber = SteamCompressorAloneResult['级数']
+                StCompNetIncome=StCompNetIncome-CtHeatPumpOperatingCost2 #压缩机蒸汽收益减去离心热泵耗电成本
+                StCompNetIncomePerStream=StCompNetIncome/StCompStreamFlow#重新计算每吨蒸汽收益
+                TotalElect = CtHeatPumpElect2 + StCompElect #总耗电量
+                TotalOperatingCost = CtHeatPumpOperatingCost2 + StCompOperatingCost #总耗电成本
+                PaybackPeriodAbsAndStComp22 = (input_variables['HeatPumpInvestmentCost5']+input_variables['StCpInvestmentCost5'])/StCompNetIncome #回报期 年
+
+
+                cols = st.columns(4)
+                # 第一行
+                cols[0].metric(label="蒸汽流量t/h", value='{:.2f}'.format(SteamCompressorAloneResult['蒸汽流量']))
+                cols[1].metric(label="耗电量 万元", value='{:.0f}'.format(TotalElect))
+                cols[2].metric(label="净收益 万元", value='{:.0f}'.format(StCompNetIncome))
+                cols[3].metric(label="回报期 年", value='{:.2f}'.format(PaybackPeriodAbsAndStComp22))
+
+                # 第二行
+                cols[0].metric(label="产蒸汽收益 万元", value='{:.0f}'.format(SteamCompressorAloneResult['产蒸汽收益']))
+                cols[1].metric(label="耗电成本 万元", value='{:.0f}'.format(TotalOperatingCost))
+                cols[2].metric(label="每吨蒸汽收益 万元", value='{:.0f}'.format(StCompNetIncomePerStream))
+                # 第三行
+                cols[0].metric(label="级数", value='{:.0f}'.format(SteamCompressorAloneResult['级数']))
+                cols[1].metric(label="离心热泵COP", value='{:.0f}'.format(CtHeatPumpResult2['COP']))
+                # 使用用户输入的文字创建流程图
+                fig, ax = plt.subplots(figsize=(6, 2))
+                create_CentHeatPump_SteamComp(TG1,TG2,input_variables['Tmiddle'],Tout1,Tout2,CtHeatPumpElect2,StCompElect,ax)
+                st.pyplot(fig)
+            else:
+                st.write(SteamCompressorAloneResult['Errordata'])
+        else:
+            st.write(CtHeatPumpResult2['Errordata'])
+
+
+        #闪蒸串联蒸汽压缩机
+        st.markdown("___")
+        st.subheader('闪蒸串联蒸汽压缩机')
+        colsInvestmentCost = st.columns(2)
+        # 第一行
+        with colsInvestmentCost[0]:
+            input_variables['FlashEvaporation'] = st.number_input('闪蒸系统投资成本 万元', value=0.0, step=100.0,key='闪蒸系统投资成本6 万元')
+        with colsInvestmentCost[1]:
+            input_variables['StCpInvestmentCost6'] = st.number_input('蒸汽压缩机投资成本 万元', value=0.0, step=100.0,key='蒸汽压缩机2投资成本6 万元')
+
+        FlashEvaResult = FlashEvaporation (HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
+        if FlashEvaResult['model']==1:        
+            FalshEvapStreamFlow = FlashEvaResult['蒸汽流量']
+            FalshEvapTG2 = FlashEvaResult['蒸汽温度']
+            FalshEvapElect = FlashEvaResult['耗电量']
+            FalshEvapOperatingCost = FlashEvaResult['耗电成本']
+            SteamCompressorAloneResult3 = SteamCompressor(HeatSourceType,FalshEvapTG2,FalshEvapTG2,Tout1,Tout2,FalshEvapStreamFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
+            if SteamCompressorAloneResult3['model'] == 1:
+                StCompStreamFlow3 = SteamCompressorAloneResult3['蒸汽流量']
+                StCompElect3 = SteamCompressorAloneResult3['耗电量']
+                StCompOperatingCost3 = SteamCompressorAloneResult3['耗电成本']
+                StCompSteamCost3 = SteamCompressorAloneResult3['产蒸汽收益']
+                StCompNetIncome3 = SteamCompressorAloneResult3['净收益']
+                StCompNetIncomePerStream3 = SteamCompressorAloneResult3['每吨蒸汽收益']
+                StCompStageNumber3 = SteamCompressorAloneResult3['级数']
+                StCompNetIncome3=StCompNetIncome3-FalshEvapOperatingCost #压缩机蒸汽收益减去离心热泵耗电成本
+                StCompNetIncomePerStream3=StCompNetIncome3/StCompStreamFlow3 #重新计算每吨蒸汽收益
+                TotalElect3 = FalshEvapElect + StCompElect3 #总耗电量
+                TotalOperatingCost3 = FalshEvapOperatingCost + StCompOperatingCost3 #总耗电成本
+                PaybackPeriodFlashAndStComp= (input_variables['FlashEvaporation']+input_variables['StCpInvestmentCost6'])/StCompNetIncome3 #回报期 年
+                
+                cols = st.columns(4)
+                # 第一行
+                cols[0].metric(label="蒸汽流量t/h", value='{:.2f}'.format(SteamCompressorAloneResult3['蒸汽流量']))
+                cols[1].metric(label="耗电量", value='{:.0f}'.format(TotalElect3))
+                cols[2].metric(label="净收益 万元", value='{:.0f}'.format(StCompNetIncome3))
+                cols[3].metric(label="回报期 年", value='{:.2f}'.format(PaybackPeriodFlashAndStComp))
+
+                # 第二行
+                cols[0].metric(label="产蒸汽收益 万元", value='{:.0f}'.format(SteamCompressorAloneResult3['产蒸汽收益']))
+                cols[1].metric(label="耗电成本 万元", value='{:.0f}'.format(TotalOperatingCost3))
+                cols[2].metric(label="每吨蒸汽收益 万元", value='{:.0f}'.format(StCompNetIncomePerStream3))
+                cols[3].metric(label="级数", value='{:.0f}'.format(SteamCompressorAloneResult3['级数']))
+                # 使用用户输入的文字创建流程图
+                fig, ax = plt.subplots(figsize=(6, 2))
+                create_FlashEva_SteamComp(TG1,TG2,FalshEvapTG2,Tout1,Tout2,FalshEvapElect,StCompElect3,ax)
+                st.pyplot(fig)
+            else:
+                st.write(SteamCompressorAloneResult3['Errordata'])
+        else:
+            st.write(FlashEvaResult['Errordata'])
+
+# 创建一个字典来存储页面函数
+PAGES = {
+    "欢迎": page0,
+    "登录后": page1,
+}
+
 
 def decrypt_data(encrypted_data, cipher_suite):
     try:
@@ -48,7 +485,6 @@ def load_and_decrypt_model(model_filename):
     else:
         return None
 
-
 def get_saturated_vapor_pressure(temperature):#查询蒸汽压力
     # 参数：'P'表示压力，'T'表示温度，'Q'表示质量分数（0表示液相，1表示气相），'Water'表示水
     pressure = PropsSI('P', 'T', temperature + 273.15, 'Q', 1, 'Water') / 1e6  # 将压力从帕斯卡（Pa）转换为兆帕（MPa）
@@ -69,7 +505,6 @@ def get_saturated_vapor_density(temperature):
     # 参数：'D'表示密度，'T'表示温度，'Q'表示质量分数（0表示液相，1表示气相），'Water'表示水
     density = PropsSI('D', 'T', temperature + 273.15, 'Q', 1, 'Water')  # 返回值的单位是千克每立方米（kg/m^3）
     return density
-
 
 def GetValue(input_variables):
     HeatSourceType=input_variables['HeatSourceType']
@@ -551,413 +986,11 @@ def create_FlashEva_SteamComp(TG1,TG2,FalshEvapTG2,Tout1,Tout2,FalshEvapElect,St
 
 
 def main():
-    st.title('余热产蒸汽系统')
-    with st.sidebar:
-        st.header('输入参数')
-        input_variables = {}
-        col0,col1 = st.columns(2)
-        with col0:
-            input_variables['HeatSourceType'] = st.radio( "请选择余热类型：", ('蒸汽', '热水'))
-        with col1:
-            input_variables['HeatSourceFlow'] = st.number_input('余热流量t/h:', value=25.0, step=1.0)
+    if 'selected_page' not in st.session_state:
+        st.session_state['selected_page'] = "欢迎"
 
-        col0, col1= st.columns(2)
-        with col0:
-            input_variables['TG1'] = st.number_input('余热入口温度:', value=90.0, step=1.0)
-            input_variables['TW1'] = st.number_input('冷却水入口:', value=32.0, step=1.0)
-            input_variables['Tout1'] = st.number_input('补水温度:', value=90.0, step=1.0)
-
-        with col1: # 第一列
-            input_variables['TG2'] = st.number_input('余热出口温度:', value=80.0, step=1.0)            
-            input_variables['TW2'] = st.number_input('冷却水出口:', value=40.0, step=1.0)
-            input_variables['Tout2'] = st.number_input('产出温度:', value=120.0, step=1.0)
-        
-        cola, colb= st.columns(2)
-        with cola: # 第1列
-            input_variables['AnnualOperatingHours'] = st.number_input('年运行时长 h', value=8000.0, step=1.0)
-            input_variables['SteamUnitPrice'] = st.number_input('蒸汽单价 元/吨:', value=100.0, step=1.0)
-        with colb: # 第2列
-            input_variables['ElectricityUnitPrice'] = st.number_input('电价:', value=0.5, step=0.1)
-            input_variables['CoolingWaterUnitPrice'] = st.number_input('冷却水单价:', value=0.4, step=0.1)
-        instructions = (                                                                    #使用说明
-                        "1.该工具从余热量推算制热量，制取饱和蒸汽，流量单位均为t/h;<br>"
-                        "2.余热类型选择蒸汽或热水，余热品味均以温度表示，热源蒸汽为饱和蒸汽;<br>"
-                        "3.如果余热为蒸汽，则余热出口为与入口温度相同的饱和水;<br>"
-                        "4.第二类吸收式热泵需要冷却水;<br>"
-                        "5.涉及到双设备串联的系统，需要手动调整串联设备时间的‘中间温度’;<br>"
-                        "6.如果需要计算投资回报期，则需要输入设备投资成本;<br>"
-                        "7.如有使用问题，或有功能需求，联系 国志鹏 。<br>"
-                        "————2024-10-08"
-                        )
-                        
-        st.markdown("___")
-        st.write('使用说明：')
-        st.caption(instructions, unsafe_allow_html=True)
-    if input_variables['HeatSourceType'] is not None:
-        HeatSourceType=input_variables['HeatSourceType']
-        TG1=input_variables['TG1']
-        TG2=input_variables['TG2']
-        Tout1=input_variables['Tout1']
-        Tout2=input_variables['Tout2']
-        HeatSourceFlow=input_variables['HeatSourceFlow']
-        AnnualOperatingHours=input_variables['AnnualOperatingHours']
-        ElectricityUnitPrice=input_variables['ElectricityUnitPrice']
-        SteamUnitPrice=input_variables['SteamUnitPrice']
-        CoolingWaterUnitPrice=input_variables['CoolingWaterUnitPrice']
-        TW1=input_variables['TW1']
-        TW2=input_variables['TW2']
-
-    if HeatSourceType == '蒸汽':
-        TG2=TG1
-        #单独吸收式热泵
-        st.subheader('单独吸收式热泵')
-        AbsAloneResult = AbsorptionHeatPump(HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
-        if AbsAloneResult['model'] == 1:
-            input_variables['ABsInvestmentCost'] = st.number_input('吸收式热泵投资成本 万元', value=0.0, step=100.0,key='吸收式热泵投资成本 万元')
-            AbsAStreamFlow = AbsAloneResult['蒸汽流量']
-            AbsACoolingWaterFlow = AbsAloneResult['冷却水流量']
-            AbsACoolingWaterCost = AbsAloneResult['冷却水成本']
-            AbsSteamCost = AbsAloneResult['产蒸汽收益']
-            AbsNetIncome = AbsAloneResult['净收益']
-            AbsNetIncomePerStream = AbsAloneResult['每吨蒸汽收益']
-            PaybackPeriodAbs = input_variables['ABsInvestmentCost']/AbsNetIncome #回报期 年
-            # 创建一个包含三个列的列表显示
-            cols = st.columns(4)
-            # 第一行
-            cols[0].metric(label="蒸汽流量t/h", value='{:.2f}'.format(AbsAloneResult['蒸汽流量']))
-            cols[1].metric(label="冷却水流量", value='{:.0f}'.format(AbsAloneResult['冷却水流量']))
-            cols[2].metric(label="净收益 万元", value='{:.0f}'.format(AbsAloneResult['净收益']))
-            cols[3].metric(label="回报期 年", value='{:.2f}'.format(PaybackPeriodAbs))
-
-            # 第二行
-            cols[0].metric(label="产蒸汽收益 万元", value='{:.0f}'.format(AbsAloneResult['产蒸汽收益']))
-            cols[1].metric(label="冷却水成本 万元", value='{:.0f}'.format(AbsAloneResult['冷却水成本']))
-            cols[2].metric(label="每吨蒸汽收益 万元", value='{:.0f}'.format(AbsAloneResult['每吨蒸汽收益']))   
-            # 使用用户输入的文字创建流程图
-            fig, ax = plt.subplots(figsize=(6, 2))
-            create_Abs_flowchart(TG1,TG2,Tout1,Tout2,TW1,TW2, ax)
-            st.pyplot(fig)
-        else:
-            st.write(AbsAloneResult['Errordata'])
-        st.markdown("___")
-        st.subheader('单独蒸汽压缩机')
-        SteamCompressorAloneResult = SteamCompressor(HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
-        if SteamCompressorAloneResult['model'] == 1:
-            input_variables['StCpInvestmentCost'] = st.number_input('蒸汽压缩机投资成本 万元', value=0.0, step=100.0,key='蒸汽压缩机投资成本 万元')            
-            StCompStreamFlow = SteamCompressorAloneResult['蒸汽流量']
-            StCompElect = SteamCompressorAloneResult['耗电量']
-            StCompOperatingCost = SteamCompressorAloneResult['耗电成本']
-            StCompSteamCost = SteamCompressorAloneResult['产蒸汽收益']
-            StCompNetIncome = SteamCompressorAloneResult['净收益']
-            StCompNetIncomePerStream = SteamCompressorAloneResult['每吨蒸汽收益']
-            StCompStageNumber = SteamCompressorAloneResult['级数']
-            PaybackPeriodSteamCompressor = input_variables['StCpInvestmentCost']/StCompNetIncome #回报期 年
-
-            cols = st.columns(4)
-            # 第一行
-            cols[0].metric(label="蒸汽流量t/h", value='{:.2f}'.format(SteamCompressorAloneResult['蒸汽流量']))
-            cols[1].metric(label="耗电量 kW", value='{:.0f}'.format(SteamCompressorAloneResult['耗电量']))
-            cols[2].metric(label="净收益 万元", value='{:.0f}'.format(SteamCompressorAloneResult['净收益']))
-            cols[3].metric(label="回报期 年", value='{:.2f}'.format(PaybackPeriodSteamCompressor))
-
-            # 第二行
-            cols[0].metric(label="产蒸汽收益 万元", value='{:.0f}'.format(SteamCompressorAloneResult['产蒸汽收益']))
-            cols[1].metric(label="耗电成本 万元", value='{:.0f}'.format(SteamCompressorAloneResult['耗电成本']))
-            cols[2].metric(label="每吨蒸汽收益 万元", value='{:.0f}'.format(SteamCompressorAloneResult['每吨蒸汽收益']))
-            cols[3].metric(label="级数", value='{:.0f}'.format(SteamCompressorAloneResult['级数']))
-            # 使用用户输入的文字创建流程图
-            fig, ax = plt.subplots(figsize=(6, 2))
-            create_SteamCompressor_flowchart(TG1,TG2,Tout2,StCompElect, ax)
-            st.pyplot(fig)
-        else:
-            st.write(SteamCompressorAloneResult['Errordata'])
-        
-        st.markdown("___")
-        st.subheader('吸收式热泵串联蒸汽压缩机')
-        colsInvestmentCost = st.columns(3)
-        # 第一行
-        with colsInvestmentCost[0]:
-            input_variables['ABsInvestmentCost2'] = st.number_input('吸收式热泵投资成本 万元', value=0.0, step=100.0,key='吸收式热泵投资成本2 万元')
-        with colsInvestmentCost[1]:
-            input_variables['StCpInvestmentCost2'] = st.number_input('蒸汽压缩机投资成本 万元', value=0.0, step=100.0,key='蒸汽压缩机2投资成本2 万元')
-        with colsInvestmentCost[2]:
-            input_variables['Tmiddle'] = st.number_input('中间温度 ℃', value=TG2+40, step=1.0)
-
-        AbsAloneResult2 = AbsorptionHeatPump(HeatSourceType,TG1,TG2,Tout1,input_variables['Tmiddle'],HeatSourceFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
-        if AbsAloneResult2['model']==1:    
-            AbsAStreamFlow2 = AbsAloneResult2['蒸汽流量']
-            AbsACoolingWaterFlow2 = AbsAloneResult2['冷却水流量']
-            AbsACoolingWaterCost2 = AbsAloneResult2['冷却水成本']
-            AbsSteamCost2 = AbsAloneResult2['产蒸汽收益']
-            AbsNetIncome2 = AbsAloneResult2['净收益']
-            AbsNetIncomePerStream2 = AbsAloneResult2['每吨蒸汽收益']
-            SteamCompressorAloneResult2 = SteamCompressor(HeatSourceType,input_variables['Tmiddle'],TG2,Tout1,Tout2,AbsAStreamFlow2,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
-            if SteamCompressorAloneResult2['model']==1:
-                StCompStreamFlow2 = SteamCompressorAloneResult2['蒸汽流量']
-                StCompElect2 = SteamCompressorAloneResult2['耗电量']
-                StCompOperatingCost2 = SteamCompressorAloneResult2['耗电成本']
-                StCompSteamCost2 = SteamCompressorAloneResult2['产蒸汽收益']
-                StCompNetIncome2 = SteamCompressorAloneResult2['净收益']
-                StCompStageNumber2 = SteamCompressorAloneResult2['级数']
-                StCompNetIncome2=StCompNetIncome2-AbsACoolingWaterCost2 #压缩机蒸汽收益减去二类热泵循环水成本
-                StCompNetIncomePerStream2=StCompNetIncome2/StCompStreamFlow2 #重新计算每吨蒸汽收益
-                PaybackPeriodAbsAndStComp = (input_variables['ABsInvestmentCost2']+input_variables['StCpInvestmentCost2'])/StCompNetIncome2 #回报期 年
-
-                cols = st.columns(4)
-                # 第一行
-                cols[0].metric(label="蒸汽流量t/h", value='{:.2f}'.format(SteamCompressorAloneResult2['蒸汽流量']))
-                cols[1].metric(label="耗电量 kW", value='{:.0f}'.format(SteamCompressorAloneResult2['耗电量']))
-                cols[2].metric(label="净收益 万元", value='{:.0f}'.format(StCompNetIncome2))
-                cols[3].metric(label="回报期 年", value='{:.2f}'.format(PaybackPeriodAbsAndStComp))
-
-                # 第二行
-                cols[0].metric(label="产蒸汽收益 万元", value='{:.0f}'.format(SteamCompressorAloneResult2['产蒸汽收益']))
-                cols[1].metric(label="耗电成本 万元", value='{:.0f}'.format(SteamCompressorAloneResult2['耗电成本']))
-                cols[2].metric(label="每吨蒸汽收益 万元", value='{:.0f}'.format(StCompNetIncomePerStream2))
-                # 第三行
-                cols[0].metric(label="级数", value='{:.0f}'.format(SteamCompressorAloneResult2['级数']))
-                cols[1].metric(label="冷却水流量", value='{:.0f}'.format(AbsAloneResult2['冷却水流量']))
-                cols[2].metric(label="冷却水成本 万元", value='{:.0f}'.format(AbsAloneResult2['冷却水成本']))
-                # 使用用户输入的文字创建流程图
-                fig, ax = plt.subplots(figsize=(6, 2))
-                create_Abs_SteamCompressor_flowchart(TG1,TG2,input_variables['Tmiddle'],Tout1,Tout2,StCompElect2,TW1,TW2,ax)
-                st.pyplot(fig)
-            else :
-                st.write(SteamCompressorAloneResult2['Errordata'])
-        else :
-            st.write(AbsAloneResult2['Errordata'])
-
-    elif HeatSourceType == '热水':
-            #单独吸收式热泵
-        st.subheader('单独吸收式热泵')
-        AbsAloneResult = AbsorptionHeatPump(HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
-        if AbsAloneResult['model']==1:
-            AbsAStreamFlow = AbsAloneResult['蒸汽流量']
-            AbsACoolingWaterFlow = AbsAloneResult['冷却水流量']
-            AbsACoolingWaterCost = AbsAloneResult['冷却水成本']
-            AbsSteamCost = AbsAloneResult['产蒸汽收益']
-            AbsNetIncome = AbsAloneResult['净收益']
-            AbsNetIncomePerStream = AbsAloneResult['每吨蒸汽收益']
-            input_variables['ABsInvestmentCost3'] = st.number_input('吸收式热泵投资成本 万元', value=0.0, step=100.0,key='吸收式热泵投资成本 万元')
-            PaybackPeriodAbs = input_variables['ABsInvestmentCost3']/AbsNetIncome #回报期 年
-
-            # 创建一个包含三个列的列表显示
-            cols = st.columns(4)
-            # 第一行
-            cols[0].metric(label="蒸汽流量t/h", value='{:.2f}'.format(AbsAloneResult['蒸汽流量']))
-            cols[1].metric(label="冷却水流量", value='{:.0f}'.format(AbsAloneResult['冷却水流量']))
-            cols[2].metric(label="净收益 万元", value='{:.0f}'.format(AbsAloneResult['净收益']))
-            cols[3].metric(label="回报期 年", value='{:.2f}'.format(PaybackPeriodAbs))
-
-            # 第二行
-            cols[0].metric(label="产蒸汽收益 万元", value='{:.0f}'.format(AbsAloneResult['产蒸汽收益']))
-            cols[1].metric(label="冷却水成本 万元", value='{:.0f}'.format(AbsAloneResult['冷却水成本']))
-            cols[2].metric(label="每吨蒸汽收益 万元", value='{:.0f}'.format(AbsAloneResult['每吨蒸汽收益']))
-                        # 使用用户输入的文字创建流程图
-            fig, ax = plt.subplots(figsize=(6, 2))
-            create_Abs_flowchart(TG1,TG2,Tout1,Tout2,TW1,TW2, ax)
-            st.pyplot(fig)
-        else :
-            st.write(AbsAloneResult['Errordata'])
-
-        st.markdown("___")
-        st.subheader('单独离心热泵')
-        CtHeatPumpResult = CentrifugalHeatPump(HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
-        if CtHeatPumpResult['model']==1:
-            #单独离心热泵
-            input_variables['HeatPumpInvestmentCost2'] = st.number_input('离心式热泵投资成本 万元', value=0.0, step=100.0,key='离心式热泵投资成本 万元')
-
-            CtHeatPumpStreamFlow = CtHeatPumpResult['蒸汽流量']
-            CtHeatPumpElect = CtHeatPumpResult['耗电量']
-            CtHeatPumpOperatingCost = CtHeatPumpResult['耗电成本']
-            CtHeatPumpSteamCost = CtHeatPumpResult['产蒸汽收益']
-            CtHeatPumpNetIncome = CtHeatPumpResult['净收益']
-            CtHeatPumpNetIncomePerStream = CtHeatPumpResult['每吨蒸汽收益']
-            PaybackPeriodCt = input_variables['HeatPumpInvestmentCost2']/CtHeatPumpNetIncome #回报期 年   
-
-            cols = st.columns(4)
-            # 第一行
-            cols[0].metric(label="蒸汽流量t/h", value='{:.2f}'.format(CtHeatPumpResult['蒸汽流量']))
-            cols[1].metric(label="耗电量", value='{:.0f}'.format(CtHeatPumpResult['耗电量']))
-            cols[2].metric(label="净收益 万元", value='{:.0f}'.format(CtHeatPumpResult['净收益']))
-            cols[3].metric(label="回报期 年", value='{:.2f}'.format(PaybackPeriodCt))
-
-            # 第二行
-            cols[0].metric(label="产蒸汽收益 万元", value='{:.0f}'.format(CtHeatPumpResult['产蒸汽收益']))
-            cols[1].metric(label="耗电成本 万元", value='{:.0f}'.format(CtHeatPumpResult['耗电成本']))
-            cols[2].metric(label="每吨蒸汽收益 万元", value='{:.0f}'.format(CtHeatPumpResult['每吨蒸汽收益']))
-            cols[3].metric(label="离心热泵COP", value='{:.0f}'.format(CtHeatPumpResult['COP']))
-            # 使用用户输入的文字创建流程图
-            fig, ax = plt.subplots(figsize=(6, 2))
-            create_CentrifugalHeatPump(TG1,TG2,Tout1,Tout2,CtHeatPumpElect, ax)
-            st.pyplot(fig)
-        else :
-            st.write(CtHeatPumpResult['Errordata'])
-
-
-        st.markdown("___")
-        st.subheader('吸收式热泵串联蒸汽压缩机') #吸收式热泵串联蒸汽压缩机
-        colsInvestmentCost = st.columns(3)
-        with colsInvestmentCost[0]:
-            input_variables['ABsInvestmentCost4'] = st.number_input('吸收式热泵投资成本 万元', value=0.0, step=100.0,key='吸收式热泵投资成本3 万元')
-        with colsInvestmentCost[1]:
-            input_variables['StCpInvestmentCost4'] = st.number_input('蒸汽压缩机投资成本 万元', value=0.0, step=100.0,key='蒸汽压缩机投资成本3 万元')
-        with colsInvestmentCost[2]:
-            input_variables['Tmiddle'] = st.number_input('中间温度 ℃', value=TG2+40, step=1.0,key='中间温度2 ℃')
-        AbsAloneResult2 = AbsorptionHeatPump(HeatSourceType,TG1,TG2,Tout1,input_variables['Tmiddle'],HeatSourceFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
-        if AbsAloneResult2['model']==1:
-            AbsAStreamFlow2 = AbsAloneResult2['蒸汽流量']
-            AbsACoolingWaterFlow2 = AbsAloneResult2['冷却水流量']
-            AbsACoolingWaterCost2 = AbsAloneResult2['冷却水成本']
-            AbsSteamCost2 = AbsAloneResult2['产蒸汽收益']
-            AbsNetIncome2 = AbsAloneResult2['净收益']
-            AbsNetIncomePerStream2 = AbsAloneResult2['每吨蒸汽收益']
-            SteamCompressorAloneResult22 = SteamCompressor(HeatSourceType,input_variables['Tmiddle'],TG2,Tout1,Tout2,AbsAStreamFlow2,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
-            if SteamCompressorAloneResult22['model'] == 1:
-                StCompStreamFlow2 = SteamCompressorAloneResult22['蒸汽流量']
-                StCompElect2 = SteamCompressorAloneResult22['耗电量']
-                StCompOperatingCost2 = SteamCompressorAloneResult22['耗电成本']
-                StCompSteamCost2 = SteamCompressorAloneResult22['产蒸汽收益']
-                StCompNetIncome2 = SteamCompressorAloneResult22['净收益']
-                StCompNetIncomePerStream2 = SteamCompressorAloneResult22['每吨蒸汽收益']
-                StCompStageNumber2 = SteamCompressorAloneResult22['级数']
-                StCompNetIncome2=StCompNetIncome2-AbsACoolingWaterCost2 #压缩机蒸汽收益减去二类热泵循环水成本
-                StCompNetIncomePerStream2=StCompNetIncome2/StCompStreamFlow2 #重新计算每吨蒸汽收益
-                PaybackPeriodAbsAndStComp = (input_variables['ABsInvestmentCost4']+input_variables['StCpInvestmentCost4'])/StCompNetIncome2 #回报期 年
-
-                cols = st.columns(4)
-                # 第一行
-                cols[0].metric(label="蒸汽流量t/h", value='{:.2f}'.format(SteamCompressorAloneResult22['蒸汽流量']))
-                cols[1].metric(label="耗电量", value='{:.0f}'.format(SteamCompressorAloneResult22['耗电量']))
-                cols[2].metric(label="净收益 万元", value='{:.0f}'.format(StCompNetIncome2))
-                cols[3].metric(label="回报期 年", value='{:.2f}'.format(PaybackPeriodAbsAndStComp))
-
-                # 第二行
-                cols[0].metric(label="产蒸汽收益 万元", value='{:.0f}'.format(SteamCompressorAloneResult22['产蒸汽收益']))
-                cols[1].metric(label="耗电成本 万元", value='{:.0f}'.format(SteamCompressorAloneResult22['耗电成本']))
-                cols[2].metric(label="每吨蒸汽收益 万元", value='{:.0f}'.format(StCompNetIncomePerStream2))
-                # 第三行
-                cols[0].metric(label="级数", value='{:.0f}'.format(SteamCompressorAloneResult22['级数']))
-                cols[1].metric(label="冷却水流量", value='{:.0f}'.format(AbsAloneResult2['冷却水流量']))
-                cols[2].metric(label="冷却水成本 万元", value='{:.0f}'.format(AbsAloneResult2['冷却水成本']))
-                # 使用用户输入的文字创建流程图
-                fig, ax = plt.subplots(figsize=(6, 2))
-                create_Abs_SteamCompressor_flowchart(TG1,TG2,input_variables['Tmiddle'],Tout1,Tout2,StCompElect2,TW1,TW2,ax)
-                st.pyplot(fig)
-            else:
-                st.write(SteamCompressorAloneResult22['Errordata'])
-        else:
-            st.write(AbsAloneResult2['Errordata'])
-
-        st.markdown("___")
-        st.subheader('离心热泵串联蒸汽压缩机')            #离心热泵串联蒸汽压缩机
-        colsInvestmentCost = st.columns(3)
-        # 第一行
-        with colsInvestmentCost[0]:
-            input_variables['HeatPumpInvestmentCost5'] = st.number_input('离心热泵投资成本 万元', value=0.0, step=100.0,key='离心热泵投资成本4 万元')
-        with colsInvestmentCost[1]:
-            input_variables['StCpInvestmentCost5'] = st.number_input('蒸汽压缩机投资成本 万元', value=0.0, step=100.0,key='蒸汽压缩机投资成本4 万元')
-        with colsInvestmentCost[2]:
-            input_variables['Tmiddle'] = st.number_input('中间温度 ℃', value=TG2+20, step=1.0,key='中间温度3 ℃')
-        CtHeatPumpResult2 = CentrifugalHeatPump(HeatSourceType,TG1,TG2,Tout1,input_variables['Tmiddle'],HeatSourceFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
-        if CtHeatPumpResult2['model']==1:
-            CtHeatPumpStreamFlow2 = CtHeatPumpResult2['蒸汽流量']
-            CtHeatPumpElect2 = CtHeatPumpResult2['耗电量']
-            CtHeatPumpOperatingCost2 = CtHeatPumpResult2['耗电成本']
-            CtHeatPumpSteamCost2 = CtHeatPumpResult2['产蒸汽收益']
-            CtHeatPumpNetIncome2 = CtHeatPumpResult2['净收益']
-            CtHeatPumpNetIncomePerStream2 = CtHeatPumpResult2['每吨蒸汽收益']
-            SteamCompressorAloneResult = SteamCompressor(HeatSourceType,input_variables['Tmiddle'],TG2,Tout1,Tout2,CtHeatPumpStreamFlow2,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
-            if SteamCompressorAloneResult['model']==1:
-                StCompStreamFlow = SteamCompressorAloneResult['蒸汽流量']
-                StCompElect = SteamCompressorAloneResult['耗电量']
-                StCompOperatingCost = SteamCompressorAloneResult['耗电成本']
-                StCompSteamCost = SteamCompressorAloneResult['产蒸汽收益']
-                StCompNetIncome = SteamCompressorAloneResult['净收益']
-                StCompNetIncomePerStream = SteamCompressorAloneResult['每吨蒸汽收益']
-                StCompStageNumber = SteamCompressorAloneResult['级数']
-                StCompNetIncome=StCompNetIncome-CtHeatPumpOperatingCost2 #压缩机蒸汽收益减去离心热泵耗电成本
-                StCompNetIncomePerStream=StCompNetIncome/StCompStreamFlow#重新计算每吨蒸汽收益
-                TotalElect = CtHeatPumpElect2 + StCompElect #总耗电量
-                TotalOperatingCost = CtHeatPumpOperatingCost2 + StCompOperatingCost #总耗电成本
-                PaybackPeriodAbsAndStComp22 = (input_variables['HeatPumpInvestmentCost5']+input_variables['StCpInvestmentCost5'])/StCompNetIncome #回报期 年
-
-
-                cols = st.columns(4)
-                # 第一行
-                cols[0].metric(label="蒸汽流量t/h", value='{:.2f}'.format(SteamCompressorAloneResult['蒸汽流量']))
-                cols[1].metric(label="耗电量 万元", value='{:.0f}'.format(TotalElect))
-                cols[2].metric(label="净收益 万元", value='{:.0f}'.format(StCompNetIncome))
-                cols[3].metric(label="回报期 年", value='{:.2f}'.format(PaybackPeriodAbsAndStComp22))
-
-                # 第二行
-                cols[0].metric(label="产蒸汽收益 万元", value='{:.0f}'.format(SteamCompressorAloneResult['产蒸汽收益']))
-                cols[1].metric(label="耗电成本 万元", value='{:.0f}'.format(TotalOperatingCost))
-                cols[2].metric(label="每吨蒸汽收益 万元", value='{:.0f}'.format(StCompNetIncomePerStream))
-                # 第三行
-                cols[0].metric(label="级数", value='{:.0f}'.format(SteamCompressorAloneResult['级数']))
-                cols[1].metric(label="离心热泵COP", value='{:.0f}'.format(CtHeatPumpResult2['COP']))
-                # 使用用户输入的文字创建流程图
-                fig, ax = plt.subplots(figsize=(6, 2))
-                create_CentHeatPump_SteamComp(TG1,TG2,input_variables['Tmiddle'],Tout1,Tout2,CtHeatPumpElect2,StCompElect,ax)
-                st.pyplot(fig)
-            else:
-                st.write(SteamCompressorAloneResult['Errordata'])
-        else:
-            st.write(CtHeatPumpResult2['Errordata'])
-
-
-        #闪蒸串联蒸汽压缩机
-        st.markdown("___")
-        st.subheader('闪蒸串联蒸汽压缩机')
-        colsInvestmentCost = st.columns(2)
-        # 第一行
-        with colsInvestmentCost[0]:
-            input_variables['FlashEvaporation'] = st.number_input('闪蒸系统投资成本 万元', value=0.0, step=100.0,key='闪蒸系统投资成本6 万元')
-        with colsInvestmentCost[1]:
-            input_variables['StCpInvestmentCost6'] = st.number_input('蒸汽压缩机投资成本 万元', value=0.0, step=100.0,key='蒸汽压缩机2投资成本6 万元')
-
-        FlashEvaResult = FlashEvaporation (HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
-        if FlashEvaResult['model']==1:        
-            FalshEvapStreamFlow = FlashEvaResult['蒸汽流量']
-            FalshEvapTG2 = FlashEvaResult['蒸汽温度']
-            FalshEvapElect = FlashEvaResult['耗电量']
-            FalshEvapOperatingCost = FlashEvaResult['耗电成本']
-            SteamCompressorAloneResult3 = SteamCompressor(HeatSourceType,FalshEvapTG2,FalshEvapTG2,Tout1,Tout2,FalshEvapStreamFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
-            if SteamCompressorAloneResult3['model'] == 1:
-                StCompStreamFlow3 = SteamCompressorAloneResult3['蒸汽流量']
-                StCompElect3 = SteamCompressorAloneResult3['耗电量']
-                StCompOperatingCost3 = SteamCompressorAloneResult3['耗电成本']
-                StCompSteamCost3 = SteamCompressorAloneResult3['产蒸汽收益']
-                StCompNetIncome3 = SteamCompressorAloneResult3['净收益']
-                StCompNetIncomePerStream3 = SteamCompressorAloneResult3['每吨蒸汽收益']
-                StCompStageNumber3 = SteamCompressorAloneResult3['级数']
-                StCompNetIncome3=StCompNetIncome3-FalshEvapOperatingCost #压缩机蒸汽收益减去离心热泵耗电成本
-                StCompNetIncomePerStream3=StCompNetIncome3/StCompStreamFlow3 #重新计算每吨蒸汽收益
-                TotalElect3 = FalshEvapElect + StCompElect3 #总耗电量
-                TotalOperatingCost3 = FalshEvapOperatingCost + StCompOperatingCost3 #总耗电成本
-                PaybackPeriodFlashAndStComp= (input_variables['FlashEvaporation']+input_variables['StCpInvestmentCost6'])/StCompNetIncome3 #回报期 年
-                
-                cols = st.columns(4)
-                # 第一行
-                cols[0].metric(label="蒸汽流量t/h", value='{:.2f}'.format(SteamCompressorAloneResult3['蒸汽流量']))
-                cols[1].metric(label="耗电量", value='{:.0f}'.format(TotalElect3))
-                cols[2].metric(label="净收益 万元", value='{:.0f}'.format(StCompNetIncome3))
-                cols[3].metric(label="回报期 年", value='{:.2f}'.format(PaybackPeriodFlashAndStComp))
-
-                # 第二行
-                cols[0].metric(label="产蒸汽收益 万元", value='{:.0f}'.format(SteamCompressorAloneResult3['产蒸汽收益']))
-                cols[1].metric(label="耗电成本 万元", value='{:.0f}'.format(TotalOperatingCost3))
-                cols[2].metric(label="每吨蒸汽收益 万元", value='{:.0f}'.format(StCompNetIncomePerStream3))
-                cols[3].metric(label="级数", value='{:.0f}'.format(SteamCompressorAloneResult3['级数']))
-                # 使用用户输入的文字创建流程图
-                fig, ax = plt.subplots(figsize=(6, 2))
-                create_FlashEva_SteamComp(TG1,TG2,FalshEvapTG2,Tout1,Tout2,FalshEvapElect,StCompElect3,ax)
-                st.pyplot(fig)
-            else:
-                st.write(SteamCompressorAloneResult3['Errordata'])
-        else:
-            st.write(FlashEvaResult['Errordata'])
+    # 根据选中的页面调用相应的页面函数
+    PAGES[st.session_state['selected_page']]()
 
 if __name__ == '__main__':
     main()
