@@ -10,6 +10,7 @@ from matplotlib.patches import FancyBboxPatch, Arrow
 from cryptography.fernet import Fernet
 import io
 import matplotlib.font_manager as font_manager
+import time
 
 font_path = '思源黑体 CN Regular.otf'
 # 加载字体
@@ -34,6 +35,7 @@ def page0():
 
     if st.button('点击2次以登录'):  
         if user_input == USERNAME and password_input == PASSWORD:
+            time.sleep(0.2)
             st.success('登录成功！')
             switch_page('登录后')
         else:
