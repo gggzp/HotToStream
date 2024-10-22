@@ -962,8 +962,8 @@ def create_FlashEva_SteamComp(TG1,TG2,FalshEvapTG2,Tout1,Tout2,FalshEvapElect,St
     ax.text(0.2, 0.3, '耗电量'+str(round(FalshEvapElect,0))+'kW', va='center', fontsize=8, fontproperties=font_prop)    
     ax.text(0.6, 0.3, '耗电量'+str(round(StCompElect3,0))+'kW', va='center', fontsize=8, fontproperties=font_prop)
     
-    ax.text(0.3, 0.7, '闪蒸罐', ha='center', va='center', fontsize=12)
-    ax.text(0.7, 0.7, '蒸汽压缩机', ha='center', va='center', fontsize=12)
+    ax.text(0.3, 0.7, '闪蒸罐', ha='center', va='center', fontsize=12, fontproperties=font_prop)
+    ax.text(0.7, 0.7, '蒸汽压缩机', ha='center', va='center', fontsize=12, fontproperties=font_prop)
 
     arrowTG1 = Arrow(0.0, 0.55, 0.2, 0, width=0.05, color='#00CED1')
     arrowTG2 = Arrow(0.2, 0.8, -0.2, 0, width=0.05, color='#00CED1')
