@@ -9,10 +9,11 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, Arrow
 from cryptography.fernet import Fernet
 import io
+import matplotlib.font_manager as font_manager
 
-# 字体文件路径
 font_path = '思源黑体 CN Regular.otf'
 # 加载字体
+font_prop = font_manager.FontProperties(fname=font_path)
 
 key=st.secrets["key"]
 cipher_suite = Fernet(key)
@@ -324,13 +325,13 @@ def create_Abs_flowchart(TG1,TG2,Tout1,Tout2,TW1,TW2,ax): #单独吸收式热泵
     # 将方块添加到图表上
     ax.add_patch(Abs)
 
-    ax.text(0.3, 0.85, '余热出口：'+str(TG2)+'℃', ha='center', va='center', fontsize=8)
-    ax.text(0.3, 0.55, '余热入口：'+str(TG1)+'℃', ha='center', va='center', fontsize=8)
+    ax.text(0.3, 0.85, '余热出口：'+str(TG2)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
+    ax.text(0.3, 0.55, '余热入口：'+str(TG1)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
     # 可变文字部分，根据用户输入来显示
-    ax.text(0.5, 0.7, '吸收式热泵', ha='center', va='center', fontsize=12)
-    ax.text(0.7, 0.85, '产出蒸汽：'+str(Tout2)+'℃', ha='center', va='center', fontsize=8)
-    ax.text(0.7, 0.55, '补水：'+str(Tout1)+'℃', ha='center', va='center', fontsize=8)   
-    ax.text(0.5, 0.3, '冷却水温度：'+str(TW1)+'-'+str(TW2)+'℃', ha='center', va='center', fontsize=8)
+    ax.text(0.5, 0.7, '吸收式热泵', ha='center', va='center', fontsize=12, fontproperties=font_prop)
+    ax.text(0.7, 0.85, '产出蒸汽：'+str(Tout2)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
+    ax.text(0.7, 0.55, '补水：'+str(Tout1)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)   
+    ax.text(0.5, 0.3, '冷却水温度：'+str(TW1)+'-'+str(TW2)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
 
     arrowTG2 = Arrow(0.4, 0.8, -0.2, 0, width=0.05, color='#00CED1')
     arrowTG1 = Arrow(0.2, 0.6, 0.2, 0, width=0.05, color='#00CED1')
