@@ -529,7 +529,7 @@ def AbsorptionHeatPump(HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,AnnualO
     if TG2<=65:
         model=0
         Errordata="热源温度低于65度，无法使用二类热泵"
-    elif Tout2>165:
+    elif Tout2>175.42:
         model=0
         Errordata="产出热温度太高，无法使用二类热泵。尝试降低蒸汽产出温度"
     else:
