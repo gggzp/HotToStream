@@ -666,29 +666,21 @@ def SteamCompressor (HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,AnnualOpe
         model=0
         Errordata="出口蒸汽压力过高，无法使用蒸汽压缩机，尝试降低出口蒸汽温度"
     else: 
-        if CompressionRatio<=2:
+        if CompressionRatio<=1.3:
+            StageNumber=0
+            model=0
+            Errordata="压比过小，无法使用蒸汽压缩机，尝试提高出口蒸汽温度或降低余热温度"
+        elif CompressionRatio<=2:
             StageNumber=1
-            encrypted_model_filename = "Lock压缩机1rbf_model.joblib"
-            # 加载并解密模型
-            joblib_model = load_and_decrypt_model(encrypted_model_filename)
             Ratio=1.03
         elif CompressionRatio<=4:
             StageNumber=2
-            encrypted_model_filename = "Lock压缩机2rbf_model.joblib"
-            # 加载并解密模型
-            joblib_model = load_and_decrypt_model(encrypted_model_filename)
             Ratio=1.0392
         elif CompressionRatio<=8:
             StageNumber=3
-            encrypted_model_filename = "Lock压缩机3rbf_model.joblib"
-            # 加载并解密模型
-            joblib_model = load_and_decrypt_model(encrypted_model_filename)
             Ratio=1.0583
-        elif CompressionRatio<=16:
+        elif CompressionRatio<=12.6:
             StageNumber=4
-            encrypted_model_filename = "Lock压缩机4rbf_model.joblib"
-            # 加载并解密模型
-            joblib_model = load_and_decrypt_model(encrypted_model_filename)
             Ratio=1.0769
         else:
             StageNumber=0
@@ -702,6 +694,11 @@ def SteamCompressor (HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,AnnualOpe
             model=0
             Errordata="蒸汽流量过小，无法使用蒸汽压缩机，尝试增加蒸汽流量或降低蒸汽出口温度"
         else:
+            encrypted_model_filename = "Lock压缩机1d.joblib"
+            joblib_model = load_and_decrypt_model(encrypted_model_filename)
+            npCompressionRatio = np.array([CompressionRatio])
+            COP_pred = joblib_model(npCompressionRatio) #出口一kg蒸汽的耗电量 单位kWh/t
+            COP=COP_pred[0]
             COP = joblib_model(TG1,Tout2) #出口一kg蒸汽的耗电量 单位kWh/t
             Elect = StreamFlow*COP #电量单位 kW
             OperatingCost=Elect*ElectricityUnitPrice*AnnualOperatingHours/10000 #耗电成本 万元/年
