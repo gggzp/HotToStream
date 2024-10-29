@@ -699,7 +699,6 @@ def SteamCompressor (HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,AnnualOpe
             npCompressionRatio = np.array([CompressionRatio])
             COP_pred = joblib_model(npCompressionRatio) #出口一kg蒸汽的耗电量 单位kWh/t
             COP=COP_pred[0]
-            COP = joblib_model(TG1,Tout2) #出口一kg蒸汽的耗电量 单位kWh/t
             Elect = StreamFlow*COP #电量单位 kW
             OperatingCost=Elect*ElectricityUnitPrice*AnnualOperatingHours/10000 #耗电成本 万元/年
             SteamCost=StreamFlow*SteamUnitPrice*AnnualOperatingHours/10000 #产蒸汽收益 万元/年
