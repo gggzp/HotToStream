@@ -12,6 +12,14 @@ import io
 import matplotlib.font_manager as font_manager
 import time
 
+#设置名称、LOGO等信息
+st.set_page_config(
+    page_title="余热制蒸汽",
+    page_icon="Static/logo.jpeg",
+    }
+)
+
+
 font_path = '思源黑体 CN Regular.otf'
 # 加载字体
 font_prop = font_manager.FontProperties(fname=font_path)
