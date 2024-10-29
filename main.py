@@ -16,7 +16,6 @@ import time
 st.set_page_config(
     page_title="余热制蒸汽",
     page_icon="Static/logo.jpeg",
-    }
 )
 
 
