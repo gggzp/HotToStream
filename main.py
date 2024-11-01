@@ -499,9 +499,9 @@ def get_saturated_vapor_pressure(temperature):#查询蒸汽压力
     pressure = PropsSI('P', 'T', temperature + 273.15, 'Q', 1, 'Water') / 1e6  # 将压力从帕斯卡（Pa）转换为兆帕（MPa）
     return pressure
 
-def get_saturated_vapor_enthalpy(temperature):#饱和蒸汽与饱和水焓差
-    enthalpyStrem = PropsSI('H', 'T', temperature + 273.15, 'Q', 1, 'Water') / 1000  # 将焓值从焦耳每千克（J/kg）转换为千焦耳每千克（kJ/kg）
-    enthalpyWater = PropsSI('H', 'T', temperature + 273.15, 'Q', 0, 'Water') / 1000  # 将焓值从焦耳每千克（J/kg）转换为千焦耳每千克（kJ/kg）
+def get_saturated_vapor_enthalpy(Tout2,Tout1):#饱和蒸汽与饱和水焓差
+    enthalpyStrem = PropsSI('H', 'T', Tout2 + 273.15, 'Q', 1, 'Water') / 1000  # 将焓值从焦耳每千克（J/kg）转换为千焦耳每千克（kJ/kg）
+    enthalpyWater = PropsSI('H', 'T', Tout1 + 273.15, 'Q', 0, 'Water') / 1000  # 将焓值从焦耳每千克（J/kg）转换为千焦耳每千克（kJ/kg）
     enthalpy=enthalpyStrem-enthalpyWater
     return enthalpy
 
@@ -563,11 +563,11 @@ def AbsorptionHeatPump(HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,AnnualO
             Errordata="产出热温度太高，无法使用二类热泵。尝试提高热源出口温度或降低产出热温度"
 
         if HeatSourceType=="蒸汽":
-            WasteHeat=get_saturated_vapor_enthalpy(TG1)*HeatSourceFlow*1000/3600 #热源热量，单位kW
+            WasteHeat=get_saturated_vapor_enthalpy(TG1,TG1)*HeatSourceFlow*1000/3600 #热源热量，单位kW
         elif HeatSourceType=="热水":
             WasteHeat=(TG1-TG2)*HeatSourceFlow/10/0.086 #热源热量，单位kW
         HeatGeneration = WasteHeat*COP #制热量kW
-        StreamFlow = HeatGeneration/get_saturated_vapor_enthalpy(Tout2) /1000*3600 #流量单位t/h
+        StreamFlow = HeatGeneration/get_saturated_vapor_enthalpy(Tout2,Tout2) /1000*3600 #流量单位t/h
         CoolingWaterGeneration = WasteHeat-HeatGeneration #冷却水热量kW
         CoolingWaterFlow=CoolingWaterGeneration*0.086*10/(TW2-TW1)
         OperatingCost=CoolingWaterFlow*CoolingWaterUnitPrice*AnnualOperatingHours/10000*0.02 #耗水成本  万元 补水率2%
@@ -640,7 +640,7 @@ def CentrifugalHeatPump (HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,Annua
         WasteHeat=(TG1-TG2)*HeatSourceFlow/10/0.086 #热源热量，单位kW
         Elect=WasteHeat/(COP-1) #耗电量
         HeatGeneration=Elect+WasteHeat #制热量kW
-        StreamFlow = HeatGeneration/get_saturated_vapor_enthalpy(Tout2) /1000*3600 #流量单位t/h
+        StreamFlow = HeatGeneration/get_saturated_vapor_enthalpy(Tout2,Tout1) /1000*3600 #流量单位t/h
         OperatingCost=Elect*ElectricityUnitPrice*AnnualOperatingHours/10000 #耗电成本 万元/年
         SteamCost=StreamFlow*SteamUnitPrice*AnnualOperatingHours/10000 #产蒸汽收益 万元/年
         NetIncome=(SteamCost-OperatingCost)  #净收益
@@ -734,7 +734,7 @@ def FlashEvaporation (HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,AnnualOp
     model=1
     if HeatSourceType=="热水":
         WasteHeat=(TG1-TG2)*HeatSourceFlow/10/0.086 #热源热量，单位kW
-        StreamFlow=WasteHeat/(get_saturated_vapor_enthalpy(TG2)*1000/3600) *0.9 #产蒸汽流量，单位t/h  其中0.9为系数90%
+        StreamFlow=WasteHeat/(get_saturated_vapor_enthalpy(TG2,TG2)*1000/3600) *0.9 #产蒸汽流量，单位t/h  其中0.9为系数90%
         Elect=HeatSourceFlow*28*1.15/0.82/367 #耗电量 单位kW
         PowerList=[0.4,0.75,1.5,2.2,3.7,5.5,7.5,11,15,18.5,22,30,37,45,55,75,90,110,132,160,185,200]
         for power in PowerList:
