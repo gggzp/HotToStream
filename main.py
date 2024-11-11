@@ -458,6 +458,72 @@ def page1():
         else:
             st.write(FlashEvaResult['Errordata'])
 
+        #闪蒸串联蒸汽压缩机
+        st.markdown("___")
+        st.subheader('大温差机组串联闪蒸串联蒸汽压缩机')
+
+        colsInvestmentCost = st.columns(3)
+        # 第一行
+        with colsInvestmentCost[0]:
+            input_variables['HeatChanger'] = st.number_input('大温差机组投资成本 万元', value=0.0, step=100.0,key='大温差机组投资成本1 万元')
+        with colsInvestmentCost[1]:
+            input_variables['FlashEvaporation'] = st.number_input('闪蒸系统投资成本 万元', value=0.0, step=100.0,key='闪蒸系统投资成本7 万元')
+        with colsInvestmentCost[2]:
+            input_variables['StCpInvestmentCost6'] = st.number_input('蒸汽压缩机投资成本 万元', value=0.0, step=100.0,key='蒸汽压缩机2投资成本7 万元')
+        
+        ColsTemp = st.columns(2)
+        with ColsTemp[0]:
+            input_variables['TempHeatChangertoFlashEvap'] = st.number_input('大温差出水温度 ℃', value=100.0, step=10.0,key='大温差出水温度')
+        with ColsTemp[1]:
+            input_variables['TempHeatChangerfromSteamComp'] = st.number_input('大温差回水温度 ℃', value=60.0, step=10.0,key='大温差回水温度')
+
+        TempHeatChangerResult = LargeTempHeatExchanger(HeatSourceType,TG1,TG2,input_variables['TempHeatChangerfromSteamComp'],input_variables['TempHeatChangertoFlashEvap'],HeatSourceFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
+        if TempHeatChangerResult['model']==1:
+            TempHeatChangerNewHeatFlow = TempHeatChangerResult['热水流量']
+            FlashEvaResult = FlashEvaporation (HeatSourceType,input_variables['TempHeatChangerfromSteamComp'],input_variables['TempHeatChangertoFlashEvap'],Tout1,Tout2,TempHeatChangerNewHeatFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
+            if FlashEvaResult['model']==1:        
+                FalshEvapStreamFlow = FlashEvaResult['蒸汽流量']
+                FalshEvapTG2 = FlashEvaResult['蒸汽温度']
+                FalshEvapElect = FlashEvaResult['耗电量']
+                FalshEvapOperatingCost = FlashEvaResult['耗电成本']
+                SteamCompressorAloneResult4 = SteamCompressor(HeatSourceType,FalshEvapTG2,FalshEvapTG2,Tout1,Tout2,FalshEvapStreamFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
+                if SteamCompressorAloneResult4['model'] == 1:
+                    StCompStreamFlow3 = SteamCompressorAloneResult4['蒸汽流量']
+                    StCompElect3 = SteamCompressorAloneResult4['耗电量']
+                    StCompOperatingCost3 = SteamCompressorAloneResult4['耗电成本']
+                    StCompSteamCost3 = SteamCompressorAloneResult4['产蒸汽收益']
+                    StCompNetIncome3 = SteamCompressorAloneResult4['净收益']
+                    StCompNetIncomePerStream3 = SteamCompressorAloneResult4['每吨蒸汽收益']
+                    StCompStageNumber3 = SteamCompressorAloneResult4['级数']
+                    StCompNetIncome3=StCompNetIncome3-FalshEvapOperatingCost #压缩机蒸汽收益减去离心热泵耗电成本
+                    StCompNetIncomePerStream3=StCompNetIncome3/StCompStreamFlow3 #重新计算每吨蒸汽收益
+                    TotalElect3 = FalshEvapElect + StCompElect3 #总耗电量
+                    TotalOperatingCost3 = FalshEvapOperatingCost + StCompOperatingCost3 #总耗电成本
+                    PaybackPeriodFlashAndStComp= (input_variables['HeatChanger']+input_variables['FlashEvaporation']+input_variables['StCpInvestmentCost6'])/StCompNetIncome3 #回报期 年
+                    
+                    cols = st.columns(4)
+                    # 第一行
+                    cols[0].metric(label="蒸汽流量t/h", value='{:.2f}'.format(SteamCompressorAloneResult4['蒸汽流量']))
+                    cols[1].metric(label="耗电量", value='{:.0f}'.format(TotalElect3))
+                    cols[2].metric(label="净收益 万元", value='{:.0f}'.format(StCompNetIncome3))
+                    cols[3].metric(label="回报期 年", value='{:.2f}'.format(PaybackPeriodFlashAndStComp))
+
+                    # 第二行
+                    cols[0].metric(label="产蒸汽收益 万元", value='{:.0f}'.format(SteamCompressorAloneResult4['产蒸汽收益']))
+                    cols[1].metric(label="耗电成本 万元", value='{:.0f}'.format(TotalOperatingCost3))
+                    cols[2].metric(label="每吨蒸汽收益 万元", value='{:.0f}'.format(StCompNetIncomePerStream3))
+                    cols[3].metric(label="级数", value='{:.0f}'.format(SteamCompressorAloneResult4['级数']))
+                    # 使用用户输入的文字创建流程图
+                    fig, ax = plt.subplots(figsize=(6, 4))
+                    create_HaetExch_FlashEva_SteamComp(TG1,TG2,input_variables['TempHeatChangerfromSteamComp'],input_variables['TempHeatChangertoFlashEvap'],FalshEvapTG2,Tout1,Tout2,FalshEvapElect,StCompElect3,ax)
+                    st.pyplot(fig)
+                else:
+                    st.write(SteamCompressorAloneResult4['Errordata'])
+            else:
+                st.write(FlashEvaResult['Errordata'])
+        else:
+            st.write(TempHeatChangerResult['Errordata'])
+
 # 创建一个字典来存储页面函数
 PAGES = {
     "欢迎": page0,
@@ -759,6 +825,35 @@ def FlashEvaporation (HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,AnnualOp
         }
     return results
 
+def LargeTempHeatExchanger(HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2):
+    Rito = (TG1 - Tout2) / (Tout1 - TG2)
+    Dt=TG1-Tout2
+
+    if Rito < 2:
+        model = 0
+        Errordata = '驱动比过低，无法使用大温差机组'
+    elif Dt < 30:
+        model = 0
+        Errordata = '余热入口与产热出口温差过低，无法使用大温差机组'
+    else:
+        model = 1
+        WasteHeat_kcal=(TG1-TG2)*HeatSourceFlow/10 #热源热量，单位万大卡
+        WasteHeat=WasteHeat_kcal/0.086 #热源热量，单位kW
+
+        NewHeat_Flow=WasteHeat_kcal*10/(Tout1-Tout2)#新热源流量，单位t/h
+
+    if model == 0:
+        results = {
+            'model':model,
+            'Errordata':Errordata,
+        }
+    else:
+        results = {
+            'model':model,
+            '热水流量': NewHeat_Flow,
+        }
+    return results
+
 def create_Abs_flowchart(TG1,TG2,Tout1,Tout2,TW1,TW2,ax): #单独吸收式热泵流程图
 
     Abs = FancyBboxPatch((0.4, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
@@ -990,6 +1085,55 @@ def create_FlashEva_SteamComp(TG1,TG2,FalshEvapTG2,Tout1,Tout2,FalshEvapElect,St
     # 'axis' 设置为'off'关闭坐标轴显示
     ax.axis('off')
 
+def create_HaetExch_FlashEva_SteamComp(TG1,TG2,Tmid1,Tmid2,FalshEvapTG2,Tout1,Tout2,FalshEvapElect,StCompElect3,ax):
+
+    HaetExch = FancyBboxPatch((0.2, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
+    FlashEvaporation = FancyBboxPatch((0.6, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
+    SteamComp = FancyBboxPatch((0.4, 1.2), 0.4, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
+
+    # 将方块添加到图表上
+    ax.add_patch(HaetExch)
+    ax.add_patch(FlashEvaporation)
+    ax.add_patch(SteamComp)
+
+    ax.text(0.1, 0.85, '余热出口：'+str(TG2)+'℃', ha='center', va='center', fontsize=8)
+    ax.text(0.1, 0.6, '余热入口：'+str(TG1)+'℃', ha='center', va='center', fontsize=8)
+    ax.text(0.5, 0.85, '大温差出水：'+str(Tmid2)+'℃', ha='center', va='center', fontsize=8)
+    ax.text(0.5, 0.6, '大温差回水：'+str(Tmid1)+'℃', ha='center', va='center', fontsize=8)
+    ax.text(0.81, 1.05, '闪蒸蒸汽：'+str(Tmid1)+'℃', ha='center', va='center', fontsize=8)
+    ax.text(0.85, 0.7, '耗电量'+str(round(FalshEvapElect,0))+'kW', va='center', fontsize=8)    
+    ax.text(0.2, 1.4, '耗电量'+str(round(StCompElect3,0))+'kW', va='center', fontsize=8)
+    ax.text(0.9, 1.5, '产出蒸汽：'+str(round(Tout2,0))+'℃', ha='center', va='center', fontsize=8)
+    
+    ax.text(0.3, 0.7, '大温差机组', ha='center', va='center', fontsize=12)
+    ax.text(0.7, 0.7, '闪蒸罐', ha='center', va='center', fontsize=12)
+    ax.text(0.6, 1.4, '蒸汽压缩机', ha='center', va='center', fontsize=12)
+
+    arrowTG1 = Arrow(0.0, 0.55, 0.2, 0, width=0.05, color='#00CED1')
+    arrowTG2 = Arrow(0.2, 0.8, -0.2, 0, width=0.05, color='#00CED1')
+    arrowMiddle = Arrow(0.4, 0.8, 0.2, 0, width=0.05, color='#FF0000')
+    arrowMiddle2 = Arrow(0.6, 0.55, -0.2, 0, width=0.05, color='#FF0000')
+    arrowMiddle3 = Arrow(0.7, 0.9, 0, 0.3, width=0.05, color='#FF0000')
+    arrowTout2 = Arrow(0.8, 1.4, 0.2, 0, width=0.05, color='#FF0000')
+    arrowEle1 = Arrow(1, 0.6, -0.2,0, width=0.1, color='#FF8C00')
+    arrowEle2 = Arrow(0.2, 1.3, 0.2, 0, width=0.1, color='#FF8C00')
+
+    # 将箭头添加到图表上
+    ax.add_patch(arrowTG1)
+    ax.add_patch(arrowTG2)
+    ax.add_patch(arrowMiddle)
+    ax.add_patch(arrowMiddle2)
+    ax.add_patch(arrowMiddle3)
+    ax.add_patch(arrowTout2)
+    ax.add_patch(arrowEle1)
+    ax.add_patch(arrowEle2)
+
+    # 设置图表的显示范围和关闭坐标轴
+    # 'set_xlim' 和 'set_ylim' 设置x轴和y轴的显示范围
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 2)
+    # 'axis' 设置为'off'关闭坐标轴显示
+    ax.axis('off')
 
 def main():
     if 'selected_page' not in st.session_state:
