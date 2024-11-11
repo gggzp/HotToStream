@@ -480,7 +480,7 @@ def page1():
         TempHeatChangerResult = LargeTempHeatExchanger(HeatSourceType,TG1,TG2,input_variables['TempHeatChangerfromSteamComp'],input_variables['TempHeatChangertoFlashEvap'],HeatSourceFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
         if TempHeatChangerResult['model']==1:
             TempHeatChangerNewHeatFlow = TempHeatChangerResult['热水流量']
-            FlashEvaResult = FlashEvaporation (HeatSourceType,input_variables['TempHeatChangerfromSteamComp'],input_variables['TempHeatChangertoFlashEvap'],Tout1,Tout2,TempHeatChangerNewHeatFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
+            FlashEvaResult = FlashEvaporation (HeatSourceType,input_variables['TempHeatChangertoFlashEvap'],input_variables['TempHeatChangerfromSteamComp'],Tout1,Tout2,TempHeatChangerNewHeatFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
             if FlashEvaResult['model']==1:        
                 FalshEvapStreamFlow = FlashEvaResult['蒸汽流量']
                 FalshEvapTG2 = FlashEvaResult['蒸汽温度']
@@ -489,7 +489,7 @@ def page1():
                 SteamCompressorAloneResult4 = SteamCompressor(HeatSourceType,FalshEvapTG2,FalshEvapTG2,Tout1,Tout2,FalshEvapStreamFlow,AnnualOperatingHours,ElectricityUnitPrice,SteamUnitPrice,CoolingWaterUnitPrice,TW1,TW2)
                 if SteamCompressorAloneResult4['model'] == 1:
                     StCompStreamFlow3 = SteamCompressorAloneResult4['蒸汽流量']
-                    StCompElect4 = SteamCompressorAloneResult4['耗电量']
+                    StCompElect3 = SteamCompressorAloneResult4['耗电量']
                     StCompOperatingCost3 = SteamCompressorAloneResult4['耗电成本']
                     StCompSteamCost3 = SteamCompressorAloneResult4['产蒸汽收益']
                     StCompNetIncome3 = SteamCompressorAloneResult4['净收益']
@@ -497,7 +497,7 @@ def page1():
                     StCompStageNumber3 = SteamCompressorAloneResult4['级数']
                     StCompNetIncome3=StCompNetIncome3-FalshEvapOperatingCost #压缩机蒸汽收益减去离心热泵耗电成本
                     StCompNetIncomePerStream3=StCompNetIncome3/StCompStreamFlow3 #重新计算每吨蒸汽收益
-                    TotalElect3 = FalshEvapElect + StCompElect4 #总耗电量
+                    TotalElect3 = FalshEvapElect + StCompElect3 #总耗电量
                     TotalOperatingCost3 = FalshEvapOperatingCost + StCompOperatingCost3 #总耗电成本
                     PaybackPeriodFlashAndStComp= (input_variables['HeatChanger']+input_variables['FlashEvaporation']+input_variables['StCpInvestmentCost6'])/StCompNetIncome3 #回报期 年
                     
@@ -515,7 +515,7 @@ def page1():
                     cols[3].metric(label="级数", value='{:.0f}'.format(SteamCompressorAloneResult4['级数']))
                     # 使用用户输入的文字创建流程图
                     fig, ax = plt.subplots(figsize=(6, 4))
-                    create_HaetExch_FlashEva_SteamComp(TG1,TG2,input_variables['TempHeatChangerfromSteamComp'],input_variables['TempHeatChangertoFlashEvap'],FalshEvapTG2,Tout1,Tout2,FalshEvapElect,StCompElect4,ax)
+                    create_HaetExch_FlashEva_SteamComp(TG1,TG2,input_variables['TempHeatChangerfromSteamComp'],input_variables['TempHeatChangertoFlashEvap'],FalshEvapTG2,Tout1,Tout2,FalshEvapElect,StCompElect3,ax)
                     st.pyplot(fig)
                 else:
                     st.write(SteamCompressorAloneResult4['Errordata'])
@@ -853,6 +853,7 @@ def LargeTempHeatExchanger(HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,Ann
             '热水流量': NewHeat_Flow,
         }
     return results
+
 
 def create_Abs_flowchart(TG1,TG2,Tout1,Tout2,TW1,TW2,ax): #单独吸收式热泵流程图
 
