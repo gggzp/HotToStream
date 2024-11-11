@@ -803,11 +803,11 @@ def FlashEvaporation (HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,AnnualOp
         WasteHeat=(TG1-TG2)*HeatSourceFlow/10/0.086 #热源热量，单位kW
         StreamFlow=WasteHeat/(get_saturated_vapor_enthalpy(TG2,TG2)*1000/3600) *0.9 #产蒸汽流量，单位t/h  其中0.9为系数90%
         Elect=HeatSourceFlow*28*1.15/0.82/367 #耗电量 单位kW
-        PowerList=[0.4,0.75,1.5,2.2,3.7,5.5,7.5,11,15,18.5,22,30,37,45,55,75,90,110,132,160,185,200]
-        for power in PowerList:
-            if power >= Elect:
-                Elect = power
-                break
+        #PowerList=[0.4,0.75,1.5,2.2,3.7,5.5,7.5,11,15,18.5,22,30,37,45,55,75,90,110,132,160,185,200]
+        #for power in PowerList:
+        #    if power >= Elect:
+        #        Elect = power
+        #        break
         OperatingCost=Elect*ElectricityUnitPrice*AnnualOperatingHours/10000 #耗电成本
         results= {
                 'model':model,
@@ -840,7 +840,7 @@ def LargeTempHeatExchanger(HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,Ann
         WasteHeat_kcal=(TG1-TG2)*HeatSourceFlow/10 #热源热量，单位万大卡
         WasteHeat=WasteHeat_kcal/0.086 #热源热量，单位kW
 
-        NewHeat_Flow=WasteHeat_kcal*10/(Tout1-Tout2)#新热源流量，单位t/h
+        NewHeat_Flow=WasteHeat_kcal*10/(Tout2-Tout1)#新热源流量，单位t/h
 
     if model == 0:
         results = {
