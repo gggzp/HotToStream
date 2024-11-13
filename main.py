@@ -829,7 +829,7 @@ def LargeTempHeatExchanger(HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,Ann
     Rito = (TG1 - Tout2) / (Tout1 - TG2)
     Dt=TG1-Tout2
 
-    if Rito < 2.7:
+    if Rito < 2:
         model = 0
         Errordata = '驱动比过低，无法使用大温差机组'
     elif Dt < 30:
