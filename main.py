@@ -18,7 +18,6 @@ st.set_page_config(
     page_icon="static/LOGO.jpg",
 )
 
-
 font_path = '思源黑体 CN Regular.otf'
 # 加载字体
 font_prop = font_manager.FontProperties(fname=font_path)
@@ -327,7 +326,7 @@ def page1():
                 cols = st.columns(4)
                 # 第一行
                 cols[0].metric(label="蒸汽流量t/h", value='{:.2f}'.format(SteamCompressorAloneResult22['蒸汽流量']))
-                cols[1].metric(label="耗电量", value='{:.0f}'.format(SteamCompressorAloneResult22['耗电量']))
+                cols[1].metric(label="耗电量 kW", value='{:.0f}'.format(SteamCompressorAloneResult22['耗电量']))
                 cols[2].metric(label="净收益 万元", value='{:.0f}'.format(StCompNetIncome2))
                 cols[3].metric(label="回报期 年", value='{:.2f}'.format(PaybackPeriodAbsAndStComp))
 
@@ -385,7 +384,7 @@ def page1():
                 cols = st.columns(4)
                 # 第一行
                 cols[0].metric(label="蒸汽流量t/h", value='{:.2f}'.format(SteamCompressorAloneResult['蒸汽流量']))
-                cols[1].metric(label="耗电量 万元", value='{:.0f}'.format(TotalElect))
+                cols[1].metric(label="耗电量 kW", value='{:.0f}'.format(TotalElect))
                 cols[2].metric(label="净收益 万元", value='{:.0f}'.format(StCompNetIncome))
                 cols[3].metric(label="回报期 年", value='{:.2f}'.format(PaybackPeriodAbsAndStComp22))
 
@@ -440,7 +439,7 @@ def page1():
                 cols = st.columns(4)
                 # 第一行
                 cols[0].metric(label="蒸汽流量t/h", value='{:.2f}'.format(SteamCompressorAloneResult3['蒸汽流量']))
-                cols[1].metric(label="耗电量", value='{:.0f}'.format(TotalElect3))
+                cols[1].metric(label="耗电量 kW", value='{:.0f}'.format(TotalElect3))
                 cols[2].metric(label="净收益 万元", value='{:.0f}'.format(StCompNetIncome3))
                 cols[3].metric(label="回报期 年", value='{:.2f}'.format(PaybackPeriodFlashAndStComp))
 
@@ -504,7 +503,7 @@ def page1():
                     cols = st.columns(4)
                     # 第一行
                     cols[0].metric(label="蒸汽流量t/h", value='{:.2f}'.format(SteamCompressorAloneResult4['蒸汽流量']))
-                    cols[1].metric(label="耗电量", value='{:.0f}'.format(TotalElect3))
+                    cols[1].metric(label="耗电量 kW", value='{:.0f}'.format(TotalElect3))
                     cols[2].metric(label="净收益 万元", value='{:.0f}'.format(StCompNetIncome3))
                     cols[3].metric(label="回报期 年", value='{:.2f}'.format(PaybackPeriodFlashAndStComp))
 
