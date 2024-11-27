@@ -76,6 +76,12 @@ def page1():
         with colb: # 第2列
             input_variables['ElectricityUnitPrice'] = st.number_input('电价:', value=0.5, step=0.1)
             input_variables['CoolingWaterUnitPrice'] = st.number_input('冷却水单价:', value=0.4, step=0.1)
+        switch = st.checkbox('显示简化流程图')
+        # 根据开关的状态显示不同的信息
+        if switch:
+            st.session_state['switch'] = 1
+        else:
+            st.session_state['switch'] = 0        
         instructions = (                                                                    #使用说明
                         "1.该工具从余热量推算制热量，制取饱和蒸汽，流量单位均为t/h;<br>"
                         "2.余热类型选择蒸汽或热水，余热品味均以温度表示，热源蒸汽为饱和蒸汽;<br>"
@@ -133,7 +139,7 @@ def page1():
             cols[2].metric(label="每吨蒸汽收益 万元", value='{:.0f}'.format(AbsAloneResult['每吨蒸汽收益']))   
             # 使用用户输入的文字创建流程图
             fig, ax = plt.subplots(figsize=(6, 2))
-            create_Abs_flowchart(TG1,TG2,Tout1,Tout2,TW1,TW2, ax)
+            create_Abs_flowchart(TG1,TG2,Tout1,Tout2,TW1,TW2, ax,st.session_state['switch'])
             st.pyplot(fig)
         else:
             st.write(AbsAloneResult['Errordata'])
@@ -165,7 +171,7 @@ def page1():
             cols[3].metric(label="级数", value='{:.0f}'.format(SteamCompressorAloneResult['级数']))
             # 使用用户输入的文字创建流程图
             fig, ax = plt.subplots(figsize=(6, 2))
-            create_SteamCompressor_flowchart(TG1,TG2,Tout2,StCompElect, ax)
+            create_SteamCompressor_flowchart(TG1,TG2,Tout2,StCompElect, ax,st.session_state['switch'])
             st.pyplot(fig)
         else:
             st.write(SteamCompressorAloneResult['Errordata'])
@@ -218,7 +224,7 @@ def page1():
                 cols[2].metric(label="冷却水成本 万元", value='{:.0f}'.format(AbsAloneResult2['冷却水成本']))
                 # 使用用户输入的文字创建流程图
                 fig, ax = plt.subplots(figsize=(6, 2))
-                create_Abs_SteamCompressor_flowchart(TG1,TG2,input_variables['Tmiddle'],Tout1,Tout2,StCompElect2,TW1,TW2,ax)
+                create_Abs_SteamCompressor_flowchart(TG1,TG2,input_variables['Tmiddle'],Tout1,Tout2,StCompElect2,TW1,TW2,ax,st.session_state['switch'])
                 st.pyplot(fig)
             else :
                 st.write(SteamCompressorAloneResult2['Errordata'])
@@ -253,7 +259,7 @@ def page1():
             cols[2].metric(label="每吨蒸汽收益 万元", value='{:.0f}'.format(AbsAloneResult['每吨蒸汽收益']))
                         # 使用用户输入的文字创建流程图
             fig, ax = plt.subplots(figsize=(6, 2))
-            create_Abs_flowchart(TG1,TG2,Tout1,Tout2,TW1,TW2, ax)
+            create_Abs_flowchart(TG1,TG2,Tout1,Tout2,TW1,TW2, ax,st.session_state['switch'])
             st.pyplot(fig)
         else :
             st.write(AbsAloneResult['Errordata'])
@@ -287,11 +293,10 @@ def page1():
             cols[3].metric(label="离心热泵COP", value='{:.0f}'.format(CtHeatPumpResult['COP']))
             # 使用用户输入的文字创建流程图
             fig, ax = plt.subplots(figsize=(6, 2))
-            create_CentrifugalHeatPump(TG1,TG2,Tout1,Tout2,CtHeatPumpElect, ax)
+            create_CentrifugalHeatPump(TG1,TG2,Tout1,Tout2,CtHeatPumpElect, ax,st.session_state['switch'])
             st.pyplot(fig)
         else :
             st.write(CtHeatPumpResult['Errordata'])
-
 
         st.markdown("___")
         st.subheader('吸收式热泵串联蒸汽压缩机') #吸收式热泵串联蒸汽压缩机
@@ -340,7 +345,7 @@ def page1():
                 cols[2].metric(label="冷却水成本 万元", value='{:.0f}'.format(AbsAloneResult2['冷却水成本']))
                 # 使用用户输入的文字创建流程图
                 fig, ax = plt.subplots(figsize=(6, 2))
-                create_Abs_SteamCompressor_flowchart(TG1,TG2,input_variables['Tmiddle'],Tout1,Tout2,StCompElect2,TW1,TW2,ax)
+                create_Abs_SteamCompressor_flowchart(TG1,TG2,input_variables['Tmiddle'],Tout1,Tout2,StCompElect2,TW1,TW2,ax,st.session_state['switch'])
                 st.pyplot(fig)
             else:
                 st.write(SteamCompressorAloneResult22['Errordata'])
@@ -397,7 +402,7 @@ def page1():
                 cols[1].metric(label="离心热泵COP", value='{:.0f}'.format(CtHeatPumpResult2['COP']))
                 # 使用用户输入的文字创建流程图
                 fig, ax = plt.subplots(figsize=(6, 2))
-                create_CentHeatPump_SteamComp(TG1,TG2,input_variables['Tmiddle'],Tout1,Tout2,CtHeatPumpElect2,StCompElect,ax)
+                create_CentHeatPump_SteamComp(TG1,TG2,input_variables['Tmiddle'],Tout1,Tout2,CtHeatPumpElect2,StCompElect,ax,st.session_state['switch'])
                 st.pyplot(fig)
             else:
                 st.write(SteamCompressorAloneResult['Errordata'])
@@ -450,7 +455,7 @@ def page1():
                 cols[3].metric(label="级数", value='{:.0f}'.format(SteamCompressorAloneResult3['级数']))
                 # 使用用户输入的文字创建流程图
                 fig, ax = plt.subplots(figsize=(6, 2))
-                create_FlashEva_SteamComp(TG1,TG2,FalshEvapTG2,Tout1,Tout2,FalshEvapElect,StCompElect3,ax)
+                create_FlashEva_SteamComp(TG1,TG2,FalshEvapTG2,Tout1,Tout2,FalshEvapElect,StCompElect3,ax,st.session_state['switch'])
                 st.pyplot(fig)
             else:
                 st.write(SteamCompressorAloneResult3['Errordata'])
@@ -514,7 +519,7 @@ def page1():
                     cols[3].metric(label="级数", value='{:.0f}'.format(SteamCompressorAloneResult4['级数']))
                     # 使用用户输入的文字创建流程图
                     fig, ax = plt.subplots(figsize=(6, 4))
-                    create_HaetExch_FlashEva_SteamComp(TG1,TG2,input_variables['TempHeatChangerfromSteamComp'],input_variables['TempHeatChangertoFlashEvap'],FalshEvapTG2,Tout1,Tout2,FalshEvapElect,StCompElect3,ax)
+                    create_HaetExch_FlashEva_SteamComp(TG1,TG2,input_variables['TempHeatChangerfromSteamComp'],input_variables['TempHeatChangertoFlashEvap'],FalshEvapTG2,Tout1,Tout2,FalshEvapElect,StCompElect3,ax,st.session_state['switch'])
                     st.pyplot(fig)
                 else:
                     st.write(SteamCompressorAloneResult4['Errordata'])
@@ -853,21 +858,23 @@ def LargeTempHeatExchanger(HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,Ann
         }
     return results
 
-
-def create_Abs_flowchart(TG1,TG2,Tout1,Tout2,TW1,TW2,ax): #单独吸收式热泵流程图
-
+def create_Abs_flowchart(TG1,TG2,Tout1,Tout2,TW1,TW2,ax,swh): #单独吸收式热泵流程图
+    # 绘制流程图中的方块（节点）
     Abs = FancyBboxPatch((0.4, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
 
     # 将方块添加到图表上
     ax.add_patch(Abs)
 
-    ax.text(0.3, 0.85, '余热出口：'+str(TG2)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.3, 0.55, '余热入口：'+str(TG1)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
+    ax.text(0.3, 0.85, '余热出口：'+str(TG2)+'℃', ha='center', va='center', fontsize=8)
+    ax.text(0.3, 0.55, '余热入口：'+str(TG1)+'℃', ha='center', va='center', fontsize=8)
     # 可变文字部分，根据用户输入来显示
-    ax.text(0.5, 0.7, '吸收式热泵', ha='center', va='center', fontsize=12, fontproperties=font_prop)
-    ax.text(0.7, 0.85, '产出蒸汽：'+str(Tout2)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.7, 0.55, '补水：'+str(Tout1)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)   
-    ax.text(0.5, 0.3, '冷却水温度：'+str(TW1)+'-'+str(TW2)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
+    if swh == 1:
+        ax.text(0.5, 0.7, '余热制蒸汽系统', ha='center', va='center', fontsize=8)
+    else:
+        ax.text(0.5, 0.7, '吸收式热泵', ha='center', va='center', fontsize=12)
+    ax.text(0.7, 0.85, '产出蒸汽：'+str(Tout2)+'℃', ha='center', va='center', fontsize=8)
+    ax.text(0.7, 0.55, '补水：'+str(Tout1)+'℃', ha='center', va='center', fontsize=8)   
+    ax.text(0.5, 0.3, '冷却水温度：'+str(TW1)+'-'+str(TW2)+'℃', ha='center', va='center', fontsize=8)
 
     arrowTG2 = Arrow(0.4, 0.8, -0.2, 0, width=0.05, color='#00CED1')
     arrowTG1 = Arrow(0.2, 0.6, 0.2, 0, width=0.05, color='#00CED1')
@@ -891,18 +898,21 @@ def create_Abs_flowchart(TG1,TG2,Tout1,Tout2,TW1,TW2,ax): #单独吸收式热泵
     # 'axis' 设置为'off'关闭坐标轴显示
     ax.axis('off')
 
-def create_SteamCompressor_flowchart(TG1,TG2,Tout2,StCompElect,ax): #单独蒸汽压缩机流程图
+def create_SteamCompressor_flowchart(TG1,TG2,Tout2,StCompElect,ax,swh): #单独蒸汽压缩机流程图
 
     SteamComp = FancyBboxPatch((0.4, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
 
     # 将方块添加到图表上
     ax.add_patch(SteamComp)
 
-    ax.text(0.3, 0.85, '余热入口：'+str(TG1)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.5, 0.7, '蒸汽压缩机', ha='center', va='center', fontsize=12, fontproperties=font_prop)
-    ax.text(0.7, 0.85, '产出蒸汽：'+str(Tout2)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.55, 0.4, '耗电量：'+str(round(StCompElect,0))+'kW', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-
+    ax.text(0.3, 0.85, '余热入口：'+str(TG1)+'℃', ha='center', va='center', fontsize=8)
+    # 可变文字部分，根据用户输入来显示
+    if swh == 1:
+        ax.text(0.5, 0.7, '余热制蒸汽系统', ha='center', va='center', fontsize=8)
+    else:
+        ax.text(0.5, 0.7, '蒸汽压缩机', ha='center', va='center', fontsize=12)
+    ax.text(0.7, 0.85, '产出蒸汽：'+str(Tout2)+'℃', ha='center', va='center', fontsize=8)
+    ax.text(0.55, 0.4, '耗电量：'+str(round(StCompElect,0))+'kW', ha='center', va='center', fontsize=8)
 
     arrowTG1 = Arrow(0.2, 0.8, 0.2, 0, width=0.05, color='#00CED1')
     arrowTout2 = Arrow(0.6, 0.8, 0.2, 0, width=0.05, color='#FF0000')
@@ -913,23 +923,34 @@ def create_SteamCompressor_flowchart(TG1,TG2,Tout2,StCompElect,ax): #单独蒸�
     ax.add_patch(arrowTout2)
     ax.add_patch(arrowEle)
 
+    # 设置图表的显示范围和关闭坐标轴
+    # 'set_xlim' 和 'set_ylim' 设置x轴和y轴的显示范围
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     # 'axis' 设置为'off'关闭坐标轴显示
     ax.axis('off')
 
-def create_CentrifugalHeatPump(TG1,TG2,Tout1,Tout2,StCompElect,ax):
+def create_CentrifugalHeatPump(TG1,TG2,Tout1,Tout2,StCompElect,ax,swh):
 
     CentrifugalHeatPump = FancyBboxPatch((0.4, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
 
     # 将方块添加到图表上
     ax.add_patch(CentrifugalHeatPump)
-    ax.text(0.3, 0.85, '余热出口：'+str(TG2)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.3, 0.6, '余热入口：'+str(TG1)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.5, 0.7, '离心式热泵', ha='center', va='center', fontsize=12, fontproperties=font_prop)
-    ax.text(0.7, 0.55, '补水：'+str(Tout1)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)   
-    ax.text(0.7, 0.85, '产出蒸汽：'+str(Tout2)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.5, 0.3, '耗电量：'+str(round(StCompElect,0))+'kW', ha='center', va='center', fontsize=8, fontproperties=font_prop)
+
+    # 在方块上添加文字
+    # 'ax.text' 在指定位置添加文字
+    # 参数分别为：x坐标，y坐标，文字内容，水平对齐方式，垂直对齐方式，字体大小
+    ax.text(0.3, 0.85, '余热出口：'+str(TG2)+'℃', ha='center', va='center', fontsize=8)
+    ax.text(0.3, 0.6, '余热入口：'+str(TG1)+'℃', ha='center', va='center', fontsize=8)
+ 
+    # 可变文字部分，根据用户输入来显示
+    if swh == 1:
+        ax.text(0.5, 0.7, '余热制蒸汽系统', ha='center', va='center', fontsize=8)
+    else:
+        ax.text(0.5, 0.7, '离心式热泵', ha='center', va='center', fontsize=12)
+    ax.text(0.7, 0.55, '补水：'+str(Tout1)+'℃', ha='center', va='center', fontsize=8)   
+    ax.text(0.7, 0.85, '产出蒸汽：'+str(Tout2)+'℃', ha='center', va='center', fontsize=8)
+    ax.text(0.5, 0.3, '耗电量：'+str(round(StCompElect,0))+'kW', ha='center', va='center', fontsize=8)
 
     arrowTG2 = Arrow(0.4, 0.8, -0.2, 0, width=0.05, color='#00CED1')
     arrowTG1 = Arrow(0.2, 0.55, 0.2, 0, width=0.05, color='#00CED1')
@@ -952,47 +973,74 @@ def create_CentrifugalHeatPump(TG1,TG2,Tout1,Tout2,StCompElect,ax):
     # 'axis' 设置为'off'关闭坐标轴显示
     ax.axis('off')    
 
-def create_Abs_SteamCompressor_flowchart(TG1,TG2,Tmiddle,Tout1,Tout2,StCompElect,TW1,TW2,ax):#吸收式热泵串联蒸汽压缩机流程图
-    # 绘制流程图中的方块（节点）
-    # 'FancyBboxPatch' 创建一个带圆角的方块
-    # 参数分别为：位置坐标（x, y），宽度，高度，圆角样式，颜色
-    Abs = FancyBboxPatch((0.2, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
-    SteamComp = FancyBboxPatch((0.6, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
+def create_Abs_SteamCompressor_flowchart(TG1,TG2,Tmiddle,Tout1,Tout2,StCompElect,TW1,TW2,ax,swh):#吸收式热泵串联蒸汽压缩机流程图
+    if swh == 1:
+        Sys = FancyBboxPatch((0.4, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
+        # 将方块添加到图表上
+        ax.add_patch(Sys)
+        # 参数分别为：x坐标，y坐标，文字内容，水平对齐方式，垂直对齐方式，字体大小
+        ax.text(0.3, 0.85, '余热出口：'+str(TG2)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.3, 0.55, '余热入口：'+str(TG1)+'℃', ha='center', va='center', fontsize=8)
+        # 可变文字部分，根据用户输入来显示
 
-    # 将方块添加到图表上
-    ax.add_patch(Abs)
-    ax.add_patch(SteamComp)
+        ax.text(0.5, 0.7, '余热制蒸汽系统', ha='center', va='center', fontsize=8)
+        ax.text(0.7, 0.85, '产出蒸汽：'+str(Tout2)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.7, 0.55, '补水：'+str(Tout1)+'℃', ha='center', va='center', fontsize=8)   
+        ax.text(0.5, 0.3, '冷却水温度：'+str(TW1)+'-'+str(TW2)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.48, 1.0, '耗电量'+str(round(StCompElect,0))+'kW', va='center', fontsize=8)
 
+        arrowTG2 = Arrow(0.4, 0.8, -0.2, 0, width=0.05, color='#00CED1')
+        arrowTG1 = Arrow(0.2, 0.6, 0.2, 0, width=0.05, color='#00CED1')
+        arrowTout2 = Arrow(0.6, 0.8, 0.2, 0, width=0.05, color='#FF0000')
+        arrowTout1 = Arrow(0.8, 0.6, -0.2, 0, width=0.05, color='#FF0000')    
+        arrowTW1 = Arrow(0.45, 0.35, 0, 0.15, width=0.05, color='#3CB371')
+        arrowTW2 = Arrow(0.55, 0.5, 0, -0.15, width=0.05, color='#3CB371')
+        arrowEle = Arrow(0.45, 1.0, 0, -0.1, width=0.05, color='#FF8C00')
+        # 将箭头添加到图表上
+        ax.add_patch(arrowTG2)
+        ax.add_patch(arrowTG1)
+        ax.add_patch(arrowTout2)
+        ax.add_patch(arrowTout1)
+        ax.add_patch(arrowTW1)
+        ax.add_patch(arrowTW2)
+        ax.add_patch(arrowEle)
+    else:
+        Abs = FancyBboxPatch((0.2, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
+        SteamComp = FancyBboxPatch((0.6, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
 
-    ax.text(0.1, 0.85, '余热出口：'+str(TG2)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.1, 0.6, '余热入口：'+str(TG1)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.5, 0.85, '中间蒸汽：'+str(Tmiddle)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.5, 0.55, '补水：'+str(Tout1)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)   
-    ax.text(0.9, 0.85, '产出蒸汽：'+str(Tout2)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.6, 0.3, '耗电量'+str(round(StCompElect,0))+'kW', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.3, 0.3, '冷却水温度：'+str(TW1)+'-'+str(TW2)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    
-    ax.text(0.3, 0.7, '吸收式热泵', ha='center', va='center', fontsize=12, fontproperties=font_prop)
-    ax.text(0.7, 0.7, '蒸汽压缩机', ha='center', va='center', fontsize=12, fontproperties=font_prop)
+        # 将方块添加到图表上
+        ax.add_patch(Abs)
+        ax.add_patch(SteamComp)
 
-    arrowTG1 = Arrow(0.0, 0.55, 0.2, 0, width=0.05, color='#00CED1')
-    arrowTG2 = Arrow(0.2, 0.8, -0.2, 0, width=0.05, color='#00CED1')
-    arrowMiddle = Arrow(0.4, 0.8, 0.2, 0, width=0.05, color='#FF0000')
-    arrowTout1 = Arrow(0.5, 0.6, -0.1, 0, width=0.05, color='#FF0000')
-    arrowTout2 = Arrow(0.8, 0.8, 0.2, 0, width=0.05, color='#FF0000')
-    arrowTW1 = Arrow(0.25, 0.35, 0, 0.15, width=0.05, color='#3CB371')
-    arrowTW2 = Arrow(0.35, 0.5, 0, -0.15, width=0.05, color='#3CB371')
-    arrowEle = Arrow(0.65, 0.35, 0, 0.15, width=0.05, color='#FF8C00')
+        ax.text(0.1, 0.85, '余热出口：'+str(TG2)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.1, 0.6, '余热入口：'+str(TG1)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.5, 0.85, '中间蒸汽：'+str(Tmiddle)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.5, 0.55, '补水：'+str(Tout1)+'℃', ha='center', va='center', fontsize=8)   
+        ax.text(0.9, 0.85, '产出蒸汽：'+str(Tout2)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.6, 0.3, '耗电量'+str(round(StCompElect,0))+'kW', va='center', fontsize=8)
+        ax.text(0.3, 0.3, '冷却水温度：'+str(TW1)+'-'+str(TW2)+'℃', ha='center', va='center', fontsize=8)
+        
+        ax.text(0.3, 0.7, '吸收式热泵', ha='center', va='center', fontsize=12)
+        ax.text(0.7, 0.7, '蒸汽压缩机', ha='center', va='center', fontsize=12)
 
-    # 将箭头添加到图表上
-    ax.add_patch(arrowTG1)
-    ax.add_patch(arrowTG2)
-    ax.add_patch(arrowMiddle)
-    ax.add_patch(arrowTout2)
-    ax.add_patch(arrowTout1)
-    ax.add_patch(arrowTW1)
-    ax.add_patch(arrowTW2)
-    ax.add_patch(arrowEle)
+        arrowTG1 = Arrow(0.0, 0.55, 0.2, 0, width=0.05, color='#00CED1')
+        arrowTG2 = Arrow(0.2, 0.8, -0.2, 0, width=0.05, color='#00CED1')
+        arrowMiddle = Arrow(0.4, 0.8, 0.2, 0, width=0.05, color='#FF0000')
+        arrowTout1 = Arrow(0.5, 0.6, -0.1, 0, width=0.05, color='#FF0000')
+        arrowTout2 = Arrow(0.8, 0.8, 0.2, 0, width=0.05, color='#FF0000')
+        arrowTW1 = Arrow(0.25, 0.35, 0, 0.15, width=0.05, color='#3CB371')
+        arrowTW2 = Arrow(0.35, 0.5, 0, -0.15, width=0.05, color='#3CB371')
+        arrowEle = Arrow(0.65, 0.35, 0, 0.15, width=0.05, color='#FF8C00')
+
+        # 将箭头添加到图表上
+        ax.add_patch(arrowTG1)
+        ax.add_patch(arrowTG2)
+        ax.add_patch(arrowMiddle)
+        ax.add_patch(arrowTout2)
+        ax.add_patch(arrowTout1)
+        ax.add_patch(arrowTW1)
+        ax.add_patch(arrowTW2)
+        ax.add_patch(arrowEle)
 
     # 设置图表的显示范围和关闭坐标轴
     # 'set_xlim' 和 'set_ylim' 设置x轴和y轴的显示范围
@@ -1001,132 +1049,204 @@ def create_Abs_SteamCompressor_flowchart(TG1,TG2,Tmiddle,Tout1,Tout2,StCompElect
     # 'axis' 设置为'off'关闭坐标轴显示
     ax.axis('off')
 
-def create_CentHeatPump_SteamComp(TG1,TG2,Tmiddle,Tout1,Tout2,CtHeatPumpElect2,StCompElect,ax):
+def create_CentHeatPump_SteamComp(TG1,TG2,Tmiddle,Tout1,Tout2,CtHeatPumpElect2,StCompElect,ax,swh):
 
-    CentrifugalHeatPump = FancyBboxPatch((0.2, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
-    SteamComp = FancyBboxPatch((0.6, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
+    if swh == 1:
+        Sys = FancyBboxPatch((0.4, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
+        # 将方块添加到图表上
+        ax.add_patch(Sys)
+        # 参数分别为：x坐标，y坐标，文字内容，水平对齐方式，垂直对齐方式，字体大小
+        ax.text(0.3, 0.85, '余热出口：'+str(TG2)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.3, 0.55, '余热入口：'+str(TG1)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.5, 0.7, '余热制蒸汽系统', ha='center', va='center', fontsize=8)
+        ax.text(0.7, 0.85, '产出蒸汽：'+str(Tout2)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.7, 0.55, '补水：'+str(Tout1)+'℃', ha='center', va='center', fontsize=8)   
+        ax.text(0.48, 0.35, '耗电量'+str(round(CtHeatPumpElect2+StCompElect,0))+'kW', va='center', fontsize=8)
 
-    # 将方块添加到图表上
-    ax.add_patch(CentrifugalHeatPump)
-    ax.add_patch(SteamComp)
+        arrowTG2 = Arrow(0.4, 0.8, -0.2, 0, width=0.05, color='#00CED1')
+        arrowTG1 = Arrow(0.2, 0.6, 0.2, 0, width=0.05, color='#00CED1')
+        arrowTout2 = Arrow(0.6, 0.8, 0.2, 0, width=0.05, color='#FF0000')
+        arrowTout1 = Arrow(0.8, 0.6, -0.2, 0, width=0.05, color='#FF0000')    
+        arrowEle = Arrow(0.45, 0.3, 0, 0.2, width=0.05, color='#FF8C00')
+        # 将箭头添加到图表上
+        ax.add_patch(arrowTG2)
+        ax.add_patch(arrowTG1)
+        ax.add_patch(arrowTout2)
+        ax.add_patch(arrowTout1)
+        ax.add_patch(arrowEle)
 
-    ax.text(0.1, 0.85, '余热出口：'+str(TG2)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.1, 0.6, '余热入口：'+str(TG1)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.5, 0.85, '中间蒸汽：'+str(Tmiddle)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.5, 0.55, '补水：'+str(Tout1)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.9, 0.85, '产出蒸汽：'+str(Tout2)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.2, 0.3, '耗电量'+str(round(CtHeatPumpElect2,0))+'kW', va='center', fontsize=8, fontproperties=font_prop)    
-    ax.text(0.6, 0.3, '耗电量'+str(round(StCompElect,0))+'kW', va='center', fontsize=8, fontproperties=font_prop)
-    
-    ax.text(0.3, 0.7, '离心式热泵', ha='center', va='center', fontsize=12, fontproperties=font_prop)
-    ax.text(0.7, 0.7, '蒸汽压缩机', ha='center', va='center', fontsize=12, fontproperties=font_prop)
+    else:
+        CentrifugalHeatPump = FancyBboxPatch((0.2, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
+        SteamComp = FancyBboxPatch((0.6, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
 
-    arrowTG1 = Arrow(0.0, 0.55, 0.2, 0, width=0.05, color='#00CED1')
-    arrowTG2 = Arrow(0.2, 0.8, -0.2, 0, width=0.05, color='#00CED1')
-    arrowMiddle = Arrow(0.4, 0.8, 0.2, 0, width=0.05, color='#FF0000')
-    arrowTout2 = Arrow(0.8, 0.8, 0.2, 0, width=0.05, color='#FF0000')
-    arrowTout1 = Arrow(0.5, 0.6, -0.1, 0, width=0.05, color='#FF0000')
-    arrowEle1 = Arrow(0.25, 0.35, 0, 0.15, width=0.05, color='#FF8C00')
-    arrowEle2 = Arrow(0.65, 0.35, 0, 0.15, width=0.05, color='#FF8C00')
+        # 将方块添加到图表上
+        ax.add_patch(CentrifugalHeatPump)
+        ax.add_patch(SteamComp)
 
-    # 将箭头添加到图表上
-    ax.add_patch(arrowTG1)
-    ax.add_patch(arrowTG2)
-    ax.add_patch(arrowMiddle)
-    ax.add_patch(arrowTout2)
-    ax.add_patch(arrowTout1)
-    ax.add_patch(arrowEle1)
-    ax.add_patch(arrowEle2)
+        ax.text(0.1, 0.85, '余热出口：'+str(TG2)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.1, 0.6, '余热入口：'+str(TG1)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.5, 0.85, '中间蒸汽：'+str(Tmiddle)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.5, 0.55, '补水：'+str(Tout1)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.9, 0.85, '产出蒸汽：'+str(Tout2)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.2, 0.3, '耗电量'+str(round(CtHeatPumpElect2,0))+'kW', va='center', fontsize=8)    
+        ax.text(0.6, 0.3, '耗电量'+str(round(StCompElect,0))+'kW', va='center', fontsize=8)
+        
+        ax.text(0.3, 0.7, '离心式热泵', ha='center', va='center', fontsize=12)
+        ax.text(0.7, 0.7, '蒸汽压缩机', ha='center', va='center', fontsize=12)
 
+        arrowTG1 = Arrow(0.0, 0.55, 0.2, 0, width=0.05, color='#00CED1')
+        arrowTG2 = Arrow(0.2, 0.8, -0.2, 0, width=0.05, color='#00CED1')
+        arrowMiddle = Arrow(0.4, 0.8, 0.2, 0, width=0.05, color='#FF0000')
+        arrowTout2 = Arrow(0.8, 0.8, 0.2, 0, width=0.05, color='#FF0000')
+        arrowTout1 = Arrow(0.5, 0.6, -0.1, 0, width=0.05, color='#FF0000')
+        arrowEle1 = Arrow(0.25, 0.35, 0, 0.15, width=0.05, color='#FF8C00')
+        arrowEle2 = Arrow(0.65, 0.35, 0, 0.15, width=0.05, color='#FF8C00')
+
+        # 将箭头添加到图表上
+        ax.add_patch(arrowTG1)
+        ax.add_patch(arrowTG2)
+        ax.add_patch(arrowMiddle)
+        ax.add_patch(arrowTout2)
+        ax.add_patch(arrowTout1)
+        ax.add_patch(arrowEle1)
+        ax.add_patch(arrowEle2)
+
+    # 设置图表的显示范围和关闭坐标轴
+    # 'set_xlim' 和 'set_ylim' 设置x轴和y轴的显示范围
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     # 'axis' 设置为'off'关闭坐标轴显示
     ax.axis('off')
 
-def create_FlashEva_SteamComp(TG1,TG2,FalshEvapTG2,Tout1,Tout2,FalshEvapElect,StCompElect3,ax):
-    # 绘制流程图中的方块（节点）
-    # 'FancyBboxPatch' 创建一个带圆角的方块
-    # 参数分别为：位置坐标（x, y），宽度，高度，圆角样式，颜色
-    FlashEvaporation = FancyBboxPatch((0.2, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
-    SteamComp = FancyBboxPatch((0.6, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
+def create_FlashEva_SteamComp(TG1,TG2,FalshEvapTG2,Tout1,Tout2,FalshEvapElect,StCompElect3,ax,swh):
+    if swh == 1:
+        Sys = FancyBboxPatch((0.4, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
+        # 将方块添加到图表上
+        ax.add_patch(Sys)
+        # 参数分别为：x坐标，y坐标，文字内容，水平对齐方式，垂直对齐方式，字体大小
+        ax.text(0.3, 0.85, '余热出口：'+str(TG2)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.3, 0.55, '余热入口：'+str(TG1)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.5, 0.7, '余热制蒸汽系统', ha='center', va='center', fontsize=8)
+        ax.text(0.7, 0.85, '产出蒸汽：'+str(Tout2)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.7, 0.55, '补水：'+str(Tout1)+'℃', ha='center', va='center', fontsize=8)   
+        ax.text(0.48, 0.35, '耗电量'+str(round(FalshEvapElect+StCompElect3,0))+'kW', va='center', fontsize=8)
 
-    # 将方块添加到图表上
-    ax.add_patch(FlashEvaporation)
-    ax.add_patch(SteamComp)
+        arrowTG2 = Arrow(0.4, 0.8, -0.2, 0, width=0.05, color='#00CED1')
+        arrowTG1 = Arrow(0.2, 0.6, 0.2, 0, width=0.05, color='#00CED1')
+        arrowTout2 = Arrow(0.6, 0.8, 0.2, 0, width=0.05, color='#FF0000')
+        arrowTout1 = Arrow(0.8, 0.6, -0.2, 0, width=0.05, color='#FF0000')    
+        arrowEle = Arrow(0.45, 0.3, 0, 0.2, width=0.05, color='#FF8C00')
+        # 将箭头添加到图表上
+        ax.add_patch(arrowTG2)
+        ax.add_patch(arrowTG1)
+        ax.add_patch(arrowTout2)
+        ax.add_patch(arrowTout1)
+        ax.add_patch(arrowEle)        
+    else:
+        FlashEvaporation = FancyBboxPatch((0.2, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
+        SteamComp = FancyBboxPatch((0.6, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
 
-    ax.text(0.1, 0.85, '余热出口：'+str(TG2)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.1, 0.6, '余热入口：'+str(TG1)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.5, 0.85, '中间蒸汽：'+str(FalshEvapTG2)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.9, 0.85, '产出蒸汽：'+str(Tout2)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.2, 0.3, '耗电量'+str(round(FalshEvapElect,0))+'kW', va='center', fontsize=8, fontproperties=font_prop)    
-    ax.text(0.6, 0.3, '耗电量'+str(round(StCompElect3,0))+'kW', va='center', fontsize=8, fontproperties=font_prop)
-    
-    ax.text(0.3, 0.7, '闪蒸罐', ha='center', va='center', fontsize=12, fontproperties=font_prop)
-    ax.text(0.7, 0.7, '蒸汽压缩机', ha='center', va='center', fontsize=12, fontproperties=font_prop)
+        # 将方块添加到图表上
+        ax.add_patch(FlashEvaporation)
+        ax.add_patch(SteamComp)
 
-    arrowTG1 = Arrow(0.0, 0.55, 0.2, 0, width=0.05, color='#00CED1')
-    arrowTG2 = Arrow(0.2, 0.8, -0.2, 0, width=0.05, color='#00CED1')
-    arrowMiddle = Arrow(0.4, 0.8, 0.2, 0, width=0.05, color='#FF0000')
-    arrowTout2 = Arrow(0.8, 0.8, 0.2, 0, width=0.05, color='#FF0000')
-    arrowEle1 = Arrow(0.25, 0.35, 0, 0.15, width=0.05, color='#FF8C00')
-    arrowEle2 = Arrow(0.65, 0.35, 0, 0.15, width=0.05, color='#FF8C00')
+        ax.text(0.1, 0.85, '余热出口：'+str(TG2)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.1, 0.6, '余热入口：'+str(TG1)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.5, 0.85, '中间蒸汽：'+str(FalshEvapTG2)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.9, 0.85, '产出蒸汽：'+str(Tout2)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.2, 0.3, '耗电量'+str(round(FalshEvapElect,0))+'kW', va='center', fontsize=8)    
+        ax.text(0.6, 0.3, '耗电量'+str(round(StCompElect3,0))+'kW', va='center', fontsize=8)
+        
+        ax.text(0.3, 0.7, '闪蒸罐', ha='center', va='center', fontsize=12)
+        ax.text(0.7, 0.7, '蒸汽压缩机', ha='center', va='center', fontsize=12)
 
-    # 将箭头添加到图表上
-    ax.add_patch(arrowTG1)
-    ax.add_patch(arrowTG2)
-    ax.add_patch(arrowMiddle)
-    ax.add_patch(arrowTout2)
-    ax.add_patch(arrowEle1)
-    ax.add_patch(arrowEle2)
+        arrowTG1 = Arrow(0.0, 0.55, 0.2, 0, width=0.05, color='#00CED1')
+        arrowTG2 = Arrow(0.2, 0.8, -0.2, 0, width=0.05, color='#00CED1')
+        arrowMiddle = Arrow(0.4, 0.8, 0.2, 0, width=0.05, color='#FF0000')
+        arrowTout2 = Arrow(0.8, 0.8, 0.2, 0, width=0.05, color='#FF0000')
+        arrowEle1 = Arrow(0.25, 0.35, 0, 0.15, width=0.05, color='#FF8C00')
+        arrowEle2 = Arrow(0.65, 0.35, 0, 0.15, width=0.05, color='#FF8C00')
 
+        # 将箭头添加到图表上
+        ax.add_patch(arrowTG1)
+        ax.add_patch(arrowTG2)
+        ax.add_patch(arrowMiddle)
+        ax.add_patch(arrowTout2)
+        ax.add_patch(arrowEle1)
+        ax.add_patch(arrowEle2)
 
+    # 设置图表的显示范围和关闭坐标轴
+    # 'set_xlim' 和 'set_ylim' 设置x轴和y轴的显示范围
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     # 'axis' 设置为'off'关闭坐标轴显示
     ax.axis('off')
 
-def create_HaetExch_FlashEva_SteamComp(TG1,TG2,Tmid1,Tmid2,FalshEvapTG2,Tout1,Tout2,FalshEvapElect,StCompElect3,ax):
+def create_HaetExch_FlashEva_SteamComp(TG1,TG2,Tmid1,Tmid2,FalshEvapTG2,Tout1,Tout2,FalshEvapElect,StCompElect3,ax,swh):
 
-    HaetExch = FancyBboxPatch((0.2, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
-    FlashEvaporation = FancyBboxPatch((0.6, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
-    SteamComp = FancyBboxPatch((0.4, 1.2), 0.4, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
+    if swh == 1:
+        Sys = FancyBboxPatch((0.4, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
+        # 将方块添加到图表上
+        ax.add_patch(Sys)
+        # 参数分别为：x坐标，y坐标，文字内容，水平对齐方式，垂直对齐方式，字体大小
+        ax.text(0.3, 0.85, '余热出口：'+str(TG2)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.3, 0.55, '余热入口：'+str(TG1)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.5, 0.7, '余热制蒸汽系统', ha='center', va='center', fontsize=8)
+        ax.text(0.7, 0.85, '产出蒸汽：'+str(Tout2)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.7, 0.55, '补水：'+str(Tout1)+'℃', ha='center', va='center', fontsize=8)   
+        ax.text(0.48, 0.35, '耗电量'+str(round(FalshEvapElect+StCompElect3,0))+'kW', va='center', fontsize=8)
 
-    # 将方块添加到图表上
-    ax.add_patch(HaetExch)
-    ax.add_patch(FlashEvaporation)
-    ax.add_patch(SteamComp)
+        arrowTG2 = Arrow(0.4, 0.8, -0.2, 0, width=0.05, color='#00CED1')
+        arrowTG1 = Arrow(0.2, 0.6, 0.2, 0, width=0.05, color='#00CED1')
+        arrowTout2 = Arrow(0.6, 0.8, 0.2, 0, width=0.05, color='#FF0000')
+        arrowTout1 = Arrow(0.8, 0.6, -0.2, 0, width=0.05, color='#FF0000')    
+        arrowEle = Arrow(0.45, 0.3, 0, 0.2, width=0.05, color='#FF8C00')
+        # 将箭头添加到图表上
+        ax.add_patch(arrowTG2)
+        ax.add_patch(arrowTG1)
+        ax.add_patch(arrowTout2)
+        ax.add_patch(arrowTout1)
+        ax.add_patch(arrowEle)
+    else:
+        HaetExch = FancyBboxPatch((0.2, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
+        FlashEvaporation = FancyBboxPatch((0.6, 0.5), 0.2, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
+        SteamComp = FancyBboxPatch((0.4, 1.2), 0.4, 0.4, boxstyle="round,pad=0.01", color="#FFD700")
 
-    ax.text(0.1, 0.85, '余热出口：'+str(TG2)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.1, 0.6, '余热入口：'+str(TG1)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.5, 0.85, '大温差出水：'+str(Tmid2)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.5, 0.6, '大温差回水：'+str(Tmid1)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.81, 1.05, '闪蒸蒸汽：'+str(Tmid1)+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.85, 0.7, '耗电量'+str(round(FalshEvapElect,0))+'kW', va='center', fontsize=8, fontproperties=font_prop)    
-    ax.text(0.2, 1.4, '耗电量'+str(round(StCompElect3,0))+'kW', va='center', fontsize=8, fontproperties=font_prop)
-    ax.text(0.9, 1.5, '产出蒸汽：'+str(round(Tout2,0))+'℃', ha='center', va='center', fontsize=8, fontproperties=font_prop)
-    
-    ax.text(0.3, 0.7, '大温差机组', ha='center', va='center', fontsize=12, fontproperties=font_prop)
-    ax.text(0.7, 0.7, '闪蒸罐', ha='center', va='center', fontsize=12, fontproperties=font_prop)
-    ax.text(0.6, 1.4, '蒸汽压缩机', ha='center', va='center', fontsize=12, fontproperties=font_prop)
+        # 将方块添加到图表上
+        ax.add_patch(HaetExch)
+        ax.add_patch(FlashEvaporation)
+        ax.add_patch(SteamComp)
 
-    arrowTG1 = Arrow(0.0, 0.55, 0.2, 0, width=0.05, color='#00CED1')
-    arrowTG2 = Arrow(0.2, 0.8, -0.2, 0, width=0.05, color='#00CED1')
-    arrowMiddle = Arrow(0.4, 0.8, 0.2, 0, width=0.05, color='#FF0000')
-    arrowMiddle2 = Arrow(0.6, 0.55, -0.2, 0, width=0.05, color='#FF0000')
-    arrowMiddle3 = Arrow(0.7, 0.9, 0, 0.3, width=0.05, color='#FF0000')
-    arrowTout2 = Arrow(0.8, 1.4, 0.2, 0, width=0.05, color='#FF0000')
-    arrowEle1 = Arrow(1, 0.6, -0.2,0, width=0.1, color='#FF8C00')
-    arrowEle2 = Arrow(0.2, 1.3, 0.2, 0, width=0.1, color='#FF8C00')
+        ax.text(0.1, 0.85, '余热出口：'+str(TG2)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.1, 0.6, '余热入口：'+str(TG1)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.5, 0.85, '大温差出水：'+str(Tmid2)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.5, 0.6, '大温差回水：'+str(Tmid1)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.81, 1.05, '闪蒸蒸汽：'+str(Tmid1)+'℃', ha='center', va='center', fontsize=8)
+        ax.text(0.85, 0.7, '耗电量'+str(round(FalshEvapElect,0))+'kW', va='center', fontsize=8)    
+        ax.text(0.2, 1.4, '耗电量'+str(round(StCompElect3,0))+'kW', va='center', fontsize=8)
+        ax.text(0.9, 1.5, '产出蒸汽：'+str(round(Tout2,0))+'℃', ha='center', va='center', fontsize=8)
+        
+        ax.text(0.3, 0.7, '大温差机组', ha='center', va='center', fontsize=12)
+        ax.text(0.7, 0.7, '闪蒸罐', ha='center', va='center', fontsize=12)
+        ax.text(0.6, 1.4, '蒸汽压缩机', ha='center', va='center', fontsize=12)
 
-    # 将箭头添加到图表上
-    ax.add_patch(arrowTG1)
-    ax.add_patch(arrowTG2)
-    ax.add_patch(arrowMiddle)
-    ax.add_patch(arrowMiddle2)
-    ax.add_patch(arrowMiddle3)
-    ax.add_patch(arrowTout2)
-    ax.add_patch(arrowEle1)
-    ax.add_patch(arrowEle2)
+        arrowTG1 = Arrow(0.0, 0.55, 0.2, 0, width=0.05, color='#00CED1')
+        arrowTG2 = Arrow(0.2, 0.8, -0.2, 0, width=0.05, color='#00CED1')
+        arrowMiddle = Arrow(0.4, 0.8, 0.2, 0, width=0.05, color='#FF0000')
+        arrowMiddle2 = Arrow(0.6, 0.55, -0.2, 0, width=0.05, color='#FF0000')
+        arrowMiddle3 = Arrow(0.7, 0.9, 0, 0.3, width=0.05, color='#FF0000')
+        arrowTout2 = Arrow(0.8, 1.4, 0.2, 0, width=0.05, color='#FF0000')
+        arrowEle1 = Arrow(1, 0.6, -0.2,0, width=0.1, color='#FF8C00')
+        arrowEle2 = Arrow(0.2, 1.3, 0.2, 0, width=0.1, color='#FF8C00')
+        # 将箭头添加到图表上
+        ax.add_patch(arrowTG1)
+        ax.add_patch(arrowTG2)
+        ax.add_patch(arrowMiddle)
+        ax.add_patch(arrowMiddle2)
+        ax.add_patch(arrowMiddle3)
+        ax.add_patch(arrowTout2)
+        ax.add_patch(arrowEle1)
+        ax.add_patch(arrowEle2)
 
     # 设置图表的显示范围和关闭坐标轴
     # 'set_xlim' 和 'set_ylim' 设置x轴和y轴的显示范围
