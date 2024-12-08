@@ -768,7 +768,7 @@ def SteamCompressor (HeatSourceType,TG1,TG2,Tout1,Tout2,HeatSourceFlow,AnnualOpe
     if model==1:
         StreamFlow = HeatSourceFlow*Ratio #单位 t/h
         StreamFlow_V=StreamFlow*1000/60/get_saturated_vapor_density(Tout2) #单位m3/min
-        if StreamFlow_V<50:
+        if StreamFlow_V<40:
             model=0
             Errordata="蒸汽流量过小，无法使用蒸汽压缩机，尝试增加蒸汽流量或降低蒸汽出口温度"
         else:
